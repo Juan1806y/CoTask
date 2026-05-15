@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "717329161701",
+    "firebase_url": "https://colabtasks-77ccc-default-rtdb.firebaseio.com",
+    "project_id": "colabtasks-77ccc",
+    "storage_bucket": "colabtasks-77ccc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717329161701:android:cc59f76d9c49876b3ba30c",
+        "android_client_info": {
+          "package_name": "com.uni.colabtasks"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3Sg7sqwqsy0DrzBDKmABLaK2Rd8r2P0M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717329161701:android:146461353bd423643ba30c",
+        "android_client_info": {
+          "package_name": "com.uni.colabtasks.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3Sg7sqwqsy0DrzBDKmABLaK2Rd8r2P0M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

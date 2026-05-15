@@ -1,0 +1,14 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Firebase: do NOT commit your real google-services.json with secrets
+# (commit the placeholder under app/ only if it has dummy values)

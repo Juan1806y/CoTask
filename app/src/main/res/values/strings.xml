@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CoTask</string>
+
+    <!-- Auth -->
+    <string name="login_title">Bienvenido</string>
+    <string name="login_subtitle">Inicia sesión para continuar</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="sign_in">Iniciar sesión</string>
+    <string name="sign_up">Crear cuenta</string>
+    <string name="sign_out">Cerrar sesión</string>
+    <string name="continue_with_google">Continuar con Google</string>
+    <string name="no_account_prompt">¿No tienes cuenta? Regístrate</string>
+    <string name="has_account_prompt">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="signup_title">Crea tu cuenta</string>
+    <string name="display_name">Nombre</string>
+
+    <!-- Drawer -->
+    <string name="menu_lists">Listas</string>
+    <string name="menu_calendar">Calendario</string>
+    <string name="menu_settings">Configuración</string>
+    <string name="open_menu">Abrir menú</string>
+    <string name="profile">Perfil</string>
+
+    <!-- Task lists -->
+    <string name="task_lists_title">Mis Listas</string>
+    <string name="lists_count_total">%1$d listas en total</string>
+    <string name="list_count_total_one">1 lista en total</string>
+    <string name="new_list">Nueva Lista</string>
+    <string name="show_favorites">Favoritos</string>
+    <string name="empty_lists">Todavía no tienes listas. Crea la primera.</string>
+    <string name="empty_favorites">No tienes listas favoritas.</string>
+
+    <!-- List create/edit dialog -->
+    <string name="dialog_new_list_title">Crear nueva lista</string>
+    <string name="dialog_new_list_subtitle">Crea una nueva lista para organizar tus tareas</string>
+    <string name="dialog_edit_list_title">Editar lista</string>
+    <string name="list_name_hint">Nombre</string>
+    <string name="list_description_hint">Descripción</string>
+    <string name="add_contributor">Agregar contribuyente</string>
+    <string name="contributor_email_hint">Correo del contribuyente</string>
+    <string name="create_list">Crear lista</string>
+    <string name="progress_percent">Progreso — %1$d%%</string>
+
+    <!-- Tasks -->
+    <string name="new_task">Nueva Tarea</string>
+    <string name="edit_task">Editar tarea</string>
+    <string name="dialog_new_task_title">Crear nueva tarea</string>
+    <string name="dialog_new_task_subtitle">Añade una nueva tarea a tu lista</string>
+    <string name="task_title_hint">Nombre Tarea</string>
+    <string name="task_description_hint">Descripción</string>
+    <string name="task_date_hint">Fecha</string>
+    <string name="task_date_placeholder">dd/mm/aaaa</string>
+    <string name="task_category_hint">Categoría</string>
+    <string name="custom_category">Otra…</string>
+    <string name="create_task">Crear tarea</string>
+    <string name="filter_all">Todas</string>
+    <string name="filter_pending">Pendientes</string>
+    <string name="filter_done">Completadas</string>
+    <string name="filter_by_category">Filtrar por categoría</string>
+    <string name="filter_all_categories">Todas las categorías</string>
+    <string name="stat_total">Total</string>
+    <string name="stat_pending">Pendientes</string>
+    <string name="stat_done">Completadas</string>
+    <string name="empty_tasks">Sin tareas en esta lista todavía.</string>
+
+    <!-- Categories -->
+    <string name="category_personal">Personal</string>
+    <string name="category_work">Trabajo</string>
+    <string name="category_study">Estudio</string>
+    <string name="category_home">Hogar</string>
+    <string name="category_health">Salud</string>
+    <string name="category_other">Otros</string>
+
+    <!-- Calendar -->
+    <string name="calendar_title">Calendario</string>
+    <string name="month_selector">Mes</string>
+    <string name="activities_for_day">Actividades del %1$s</string>
+    <string name="no_activities">Sin actividades este día.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Configuración</string>
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_theme_system">Seguir sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_dynamic_color">Color dinámico (Material You)</string>
+    <string name="settings_account">Cuenta</string>
+
+    <!-- Common -->
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Eliminar</string>
+    <string name="share">Compartir</string>
+    <string name="favorite">Favorito</string>
+    <string name="retry">Reintentar</string>
+    <string name="loading">Cargando…</string>
+    <string name="generic_error">Algo salió mal. Inténtalo de nuevo.</string>
+
+    <!-- Firebase / Google sign-in (set the Web Client ID from your Firebase console) -->
+    <string name="default_web_client_id">717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com</string>
+</resources>
