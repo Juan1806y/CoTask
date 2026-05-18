@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -103,7 +104,9 @@ private fun AppGraphContent(
         composable(Destinations.TASK_LISTS) {
             TaskListsScreen(
                 onMenuClick = onOpenDrawer,
-                onProfileClick = { navController.navigate(Destinations.SETTINGS) },
+                // Usa el mismo patrón que el drawer para que Settings sea peer-level
+                // (no se apila sobre Lists) y la nav de regreso sea consistente.
+                onProfileClick = { navigateToDrawerSection(navController, DrawerSection.SETTINGS) },
                 onOpenList = { listId -> navController.navigate(Destinations.tasks(listId)) }
             )
         }
@@ -111,7 +114,7 @@ private fun AppGraphContent(
         composable(Destinations.CALENDAR) {
             CalendarScreen(
                 onMenuClick = onOpenDrawer,
-                onProfileClick = { navController.navigate(Destinations.SETTINGS) },
+                onProfileClick = { navigateToDrawerSection(navController, DrawerSection.SETTINGS) },
                 onOpenTask = { task ->
                     navController.navigate(Destinations.taskEdit(task.listId, task.id))
                 }
@@ -162,7 +165,9 @@ private fun AppGraphContent(
 
 private fun navigateToDrawerSection(navController: NavHostController, section: DrawerSection) {
     navController.navigate(section.route) {
-        popUpTo(navController.graph.startDestinationId) { saveState = true }
+        // findStartDestination() es más robusto que graph.startDestinationId en grafos
+        // con sub-grafos / sub-rutas. Para grafo plano es equivalente, pero seguro siempre.
+        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }

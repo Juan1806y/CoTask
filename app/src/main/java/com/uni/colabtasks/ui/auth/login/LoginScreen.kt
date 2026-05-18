@@ -237,6 +237,8 @@ fun LoginScreen(
                                         viewModel.signInWithGoogleToken(r.idToken)
                                     is GoogleSignInHelper.Result.Failure ->
                                         viewModel.reportGoogleFailure(r.message)
+
+                                    else -> {}
                                 }
                             }
                         },

@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "717329161701-8862ql8k6dpot6b55v8m39b781ikns1t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uni.colabtasks",
+            "certificate_hash": "1bfa9eea2548b6763c034b40a89dcd731c3ed568"
+          }
+        },
+        {
           "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -43,6 +51,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "717329161701-735r9jvvqg0b5khadfeeghgpsljfnme5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uni.colabtasks.debug",
+            "certificate_hash": "1bfa9eea2548b6763c034b40a89dcd731c3ed568"
+          }
+        },
         {
           "client_id": "717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com",
           "client_type": 3
