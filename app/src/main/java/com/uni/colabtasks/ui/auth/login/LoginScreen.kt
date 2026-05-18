@@ -159,8 +159,8 @@ fun LoginScreen(
                             focusedTextColor     = Color.White,
                             unfocusedTextColor   = Color.White,
                             cursorColor          = OrangeLight,
-                            focusedContainerColor   = Color.White.copy(alpha = 0.18f),
-                            unfocusedContainerColor = Color.White.copy(alpha = 0.18f),
+                            focusedContainerColor   = Color.White.copy(alpha = 0.28f),
+                            unfocusedContainerColor = Color.White.copy(alpha = 0.28f),
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -185,8 +185,8 @@ fun LoginScreen(
                             focusedTextColor     = Color.White,
                             unfocusedTextColor   = Color.White,
                             cursorColor          = OrangeLight,
-                            focusedContainerColor   = Color.White.copy(alpha = 0.18f),
-                            unfocusedContainerColor = Color.White.copy(alpha = 0.18f),
+                            focusedContainerColor   = Color.White.copy(alpha = 0.28f),
+                            unfocusedContainerColor = Color.White.copy(alpha = 0.28f),
                         ),
                         shape = RoundedCornerShape(12.dp)
                     )

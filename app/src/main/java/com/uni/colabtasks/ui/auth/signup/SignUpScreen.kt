@@ -247,7 +247,7 @@ fun SignUpScreen(
                             .height(52.dp),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = OrangeLight,
+                            containerColor = Color.White,
                             contentColor   = Color(0xFF3A1A00)
                         )
                     ) {
@@ -296,8 +296,8 @@ private fun outlinedFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor        = Color.White,
     unfocusedTextColor      = Color.White,
     cursorColor             = OrangeLight,
-    focusedContainerColor   = Color.White.copy(alpha = 0.08f),
-    unfocusedContainerColor = Color.White.copy(alpha = 0.08f),
+    focusedContainerColor   = Color.White.copy(alpha = 0.28f),
+    unfocusedContainerColor = Color.White.copy(alpha = 0.28f),
 )
 
 // ── Sticky note pequeño decorativo ──
