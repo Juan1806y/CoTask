@@ -9,6 +9,8 @@ data class Task(
     val category: String?,
     val isCompleted: Boolean,
     val dueDate: Long?,
+    val priority: Priority = Priority.NONE,
+    val assignedTo: String? = null,
     val createdAt: Long,
     val updatedAt: Long
 )

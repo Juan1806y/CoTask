@@ -22,5 +22,7 @@ interface TaskListRepository {
     )
     suspend fun setFavorite(id: String, favorite: Boolean)
     suspend fun deleteList(id: String)
+    /** Re-inserta una lista existente verbatim (mismo id) — usado para deshacer un borrado. */
+    suspend fun restoreList(list: TaskList)
     suspend fun syncFromRemote(ownerId: String)
 }

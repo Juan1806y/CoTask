@@ -33,6 +33,9 @@ coroutines = "1.9.0"
 # DataStore (theme prefs)
 datastore = "1.1.1"
 
+# WorkManager (due-date reminders)
+workManager = "2.10.0"
+
 # Testing
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -83,6 +86,9 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+# WorkManager
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

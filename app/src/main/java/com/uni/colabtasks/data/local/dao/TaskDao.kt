@@ -1,9 +1,8 @@
 package com.uni.colabtasks.data.local.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.uni.colabtasks.data.local.entity.TaskEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -55,10 +54,10 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     suspend fun findById(id: String): TaskEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(entity: TaskEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertAll(entities: List<TaskEntity>)
 
     @Query("UPDATE tasks SET isCompleted = :completed, updatedAt = :updatedAt WHERE id = :id")
@@ -67,6 +66,14 @@ interface TaskDao {
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun deleteById(id: String)
 
-    @Query("DELETE FROM tasks WHERE listId = :listId AND id NOT IN (:keepIds)")
-    suspend fun deleteByListExcept(listId: String, keepIds: List<String>)
+    /** Ids de todas las listas cacheadas (owned + shared) — para filtrar tareas sincronizables. */
+    @Query("SELECT id FROM task_lists")
+    suspend fun knownListIds(): List<String>
+
+    /**
+     * Reconciliación por dueño: borra las tareas de `ownerId` que ya no existen en remoto.
+     * Atómico sobre todas las listas del dueño, evitando carreras entre listas.
+     */
+    @Query("DELETE FROM tasks WHERE ownerId = :ownerId AND id NOT IN (:keepIds)")
+    suspend fun deleteForOwnerExcept(ownerId: String, keepIds: List<String>)
 }

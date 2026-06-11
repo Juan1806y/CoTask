@@ -22,6 +22,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.IconButton
@@ -50,6 +52,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
+import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.ui.util.priorityColor
+import com.uni.colabtasks.ui.util.priorityLabel
 import com.uni.colabtasks.domain.model.TaskCategory
 import com.uni.colabtasks.ui.common.components.LoadingIndicator
 import com.uni.colabtasks.ui.util.formatShortDate
@@ -90,11 +95,13 @@ fun TaskEditScreen(
                 description = state.description,
                 category = state.category,
                 dueDate = state.dueDate,
+                priority = state.priority,
                 isSaving = state.isSaving,
                 onTitleChange = viewModel::onTitleChange,
                 onDescriptionChange = viewModel::onDescriptionChange,
                 onCategoryChange = viewModel::onCategoryChange,
                 onDateChange = viewModel::onDueDateChange,
+                onPriorityChange = viewModel::onPriorityChange,
                 onSave = viewModel::save,
                 onCancel = onBack
             )
@@ -110,11 +117,13 @@ private fun TaskEditCard(
     description: String,
     category: String,
     dueDate: Long?,
+    priority: Priority,
     isSaving: Boolean,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
     onDateChange: (Long?) -> Unit,
+    onPriorityChange: (Priority) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -187,6 +196,9 @@ private fun TaskEditCard(
                 value = category,
                 onValueChange = onCategoryChange
             )
+            Spacer(Modifier.size(14.dp))
+
+            PrioritySelector(selected = priority, onSelect = onPriorityChange)
 
             Spacer(Modifier.size(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -278,6 +290,34 @@ private fun CategoryPicker(value: String, onValueChange: (String) -> Unit) {
                         onValueChange(cat.key)
                         expanded = false
                     }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PrioritySelector(selected: Priority, onSelect: (Priority) -> Unit) {
+    Column {
+        Text(
+            text = stringResource(R.string.priority),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.size(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(Priority.NONE, Priority.LOW, Priority.MEDIUM, Priority.HIGH).forEach { p ->
+                val chipColor = priorityColor(p)
+                FilterChip(
+                    selected = selected == p,
+                    onClick = { onSelect(p) },
+                    label = { Text(priorityLabel(p)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = chipColor.copy(alpha = 0.25f),
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             }
         }

@@ -7,11 +7,13 @@ import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskCounts
 import com.uni.colabtasks.domain.model.TaskFilter
 import com.uni.colabtasks.domain.model.TaskList
+import com.uni.colabtasks.domain.model.TaskSort
 import com.uni.colabtasks.domain.repository.TaskListRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
 import com.uni.colabtasks.domain.usecase.task.DeleteTaskUseCase
 import com.uni.colabtasks.domain.usecase.task.ObserveTaskCountsUseCase
 import com.uni.colabtasks.domain.usecase.task.ObserveTasksUseCase
+import com.uni.colabtasks.domain.usecase.task.SaveTaskUseCase
 import com.uni.colabtasks.domain.usecase.task.ToggleTaskCompletionUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.ToggleFavoriteUseCase
 import com.uni.colabtasks.ui.navigation.Destinations
@@ -34,8 +36,11 @@ data class TasksUiState(
     val filter: TaskFilter = TaskFilter.ALL,
     val selectedCategory: String? = null,
     val availableCategories: List<String> = emptyList(),
+    val searchQuery: String = "",
+    val sort: TaskSort = TaskSort.DUE_DATE,
     val counts: TaskCounts = TaskCounts.Empty,
     val list: TaskList? = null,
+    val pendingUndo: Task? = null,
     val errorMessage: String? = null
 )
 
@@ -49,6 +54,7 @@ class TasksViewModel @Inject constructor(
     observeCounts: ObserveTaskCountsUseCase,
     private val toggleCompletion: ToggleTaskCompletionUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
+    private val saveTaskUseCase: SaveTaskUseCase,
     private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
@@ -56,29 +62,29 @@ class TasksViewModel @Inject constructor(
 
     private val filter = MutableStateFlow(TaskFilter.ALL)
     private val selectedCategory = MutableStateFlow<String?>(null)
+    private val searchQuery = MutableStateFlow("")
+    private val sort = MutableStateFlow(TaskSort.DUE_DATE)
 
     private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
-    /** Tareas crudas de Room según el filtro de status (antes del filtro por categoría). */
+    /** Tareas crudas de Room según el filtro de status (antes de categoría/búsqueda/orden). */
     private val tasksByStatus: StateFlow<List<Task>> = filter
         .flatMapLatest { observeTasks(listId, it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Tareas finales tras aplicar el filtro de categoría (en memoria). */
+    /** Pipeline final: categoría → búsqueda → orden (todo en memoria). */
     private val filteredTasks: StateFlow<List<Task>> =
-        combine(tasksByStatus, selectedCategory) { items, category ->
-            if (category.isNullOrBlank()) items
-            else items.filter { it.category.equals(category, ignoreCase = true) }
+        combine(tasksByStatus, selectedCategory, searchQuery, sort) { items, category, query, sortOption ->
+            items
+                .filter { category.isNullOrBlank() || it.category.equals(category, ignoreCase = true) }
+                .filter { query.isBlank() || it.matchesQuery(query) }
+                .sortedWith(comparatorFor(sortOption))
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val counts: StateFlow<TaskCounts> = observeCounts(listId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TaskCounts.Empty)
 
-    /**
-     * Categorías presentes en las tareas de esta lista (sin importar el filtro de status,
-     * para que siempre se vean todas las opciones disponibles).
-     */
     private val availableCategories: StateFlow<List<String>> =
         observeTasks(listId, TaskFilter.ALL)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -95,7 +101,7 @@ class TasksViewModel @Inject constructor(
             taskListRepository.observeList(listId).collect { list ->
                 _uiState.update { it.copy(list = list) }
                 list?.ownerId?.let { ownerId ->
-                    taskRepository.syncFromRemote(ownerId, listId)
+                    taskRepository.syncTasksForOwner(ownerId)
                 }
             }
         }
@@ -105,9 +111,7 @@ class TasksViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            counts.collect { value ->
-                _uiState.update { it.copy(counts = value) }
-            }
+            counts.collect { value -> _uiState.update { it.copy(counts = value) } }
         }
         viewModelScope.launch {
             filter.collect { value -> _uiState.update { it.copy(filter = value) } }
@@ -116,11 +120,16 @@ class TasksViewModel @Inject constructor(
             selectedCategory.collect { value -> _uiState.update { it.copy(selectedCategory = value) } }
         }
         viewModelScope.launch {
+            searchQuery.collect { value -> _uiState.update { it.copy(searchQuery = value) } }
+        }
+        viewModelScope.launch {
+            sort.collect { value -> _uiState.update { it.copy(sort = value) } }
+        }
+        viewModelScope.launch {
             availableCategories.collect { value ->
                 _uiState.update { current ->
-                    // Si la categoría seleccionada ya no existe en la lista, reseteamos a "todas".
-                    val seleccionStillValid = current.selectedCategory?.let { it in value } ?: true
-                    val newSelection = if (seleccionStillValid) current.selectedCategory else null
+                    val selectionStillValid = current.selectedCategory?.let { it in value } ?: true
+                    val newSelection = if (selectionStillValid) current.selectedCategory else null
                     if (current.selectedCategory != newSelection) selectedCategory.value = newSelection
                     current.copy(availableCategories = value)
                 }
@@ -129,16 +138,32 @@ class TasksViewModel @Inject constructor(
     }
 
     fun setFilter(value: TaskFilter) { filter.value = value }
-
     fun setCategory(value: String?) { selectedCategory.value = value }
+    fun setSearchQuery(value: String) { searchQuery.value = value }
+    fun setSort(value: TaskSort) { sort.value = value }
 
     fun toggle(task: Task) {
         viewModelScope.launch { toggleCompletion(task.id, !task.isCompleted) }
     }
 
+    /** Borra la tarea y guarda una copia para poder deshacer. */
     fun delete(task: Task) {
-        viewModelScope.launch { deleteTaskUseCase(task.id) }
+        viewModelScope.launch {
+            deleteTaskUseCase(task.id)
+            _uiState.update { it.copy(pendingUndo = task) }
+        }
     }
+
+    /** Re-crea la última tarea borrada conservando su id y campos. */
+    fun undoDelete() {
+        val task = _uiState.value.pendingUndo ?: return
+        viewModelScope.launch {
+            taskRepository.createTask(task)
+            _uiState.update { it.copy(pendingUndo = null) }
+        }
+    }
+
+    fun clearUndo() = _uiState.update { it.copy(pendingUndo = null) }
 
     fun toggleListFavorite() {
         val current = _uiState.value.list ?: return
@@ -146,4 +171,25 @@ class TasksViewModel @Inject constructor(
     }
 
     fun consumeError() = _uiState.update { it.copy(errorMessage = null) }
+
+    private fun Task.matchesQuery(query: String): Boolean {
+        val q = query.trim()
+        return title.contains(q, ignoreCase = true) ||
+            description?.contains(q, ignoreCase = true) == true ||
+            category?.contains(q, ignoreCase = true) == true
+    }
+
+    /**
+     * Comparador: las completadas siempre al final; dentro de cada grupo se aplica
+     * el criterio elegido por el usuario.
+     */
+    private fun comparatorFor(sortOption: TaskSort): Comparator<Task> {
+        val secondary: Comparator<Task> = when (sortOption) {
+            TaskSort.DUE_DATE -> compareBy(nullsLast()) { it.dueDate }
+            TaskSort.PRIORITY -> compareByDescending { it.priority.level }
+            TaskSort.ALPHABETICAL -> compareBy { it.title.lowercase() }
+            TaskSort.CREATED -> compareByDescending { it.createdAt }
+        }
+        return compareBy<Task> { it.isCompleted }.then(secondary)
+    }
 }

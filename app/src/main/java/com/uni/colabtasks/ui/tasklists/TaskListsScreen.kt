@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -70,12 +71,23 @@ fun TaskListsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val undoLabel = stringResource(R.string.undo)
+    val listDeletedLabel = stringResource(R.string.list_deleted)
 
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.consumeError()
         }
+    }
+    LaunchedEffect(state.pendingUndo?.id) {
+        if (state.pendingUndo == null) return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = listDeletedLabel,
+            actionLabel = undoLabel,
+            withDismissAction = true
+        )
+        if (result == SnackbarResult.ActionPerformed) viewModel.undoDeleteList() else viewModel.clearUndo()
     }
 
     Scaffold(

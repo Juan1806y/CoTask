@@ -1,9 +1,8 @@
 package com.uni.colabtasks.data.local.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import com.uni.colabtasks.data.local.entity.TaskListEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -22,10 +21,13 @@ interface TaskListDao {
     @Query("SELECT * FROM task_lists WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<TaskListEntity?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // @Upsert hace INSERT-o-UPDATE in-place. NO usar @Insert(REPLACE): Room implementa
+    // REPLACE como DELETE+INSERT, y el DELETE dispara el ON DELETE CASCADE de la FK de tasks,
+    // borrando todas las tareas de la lista al re-sincronizarla.
+    @Upsert
     suspend fun upsert(entity: TaskListEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsertAll(entities: List<TaskListEntity>)
 
     @Query("UPDATE task_lists SET isFavorite = :favorite, updatedAt = :updatedAt WHERE id = :id")

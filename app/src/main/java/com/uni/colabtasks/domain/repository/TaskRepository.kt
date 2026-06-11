@@ -15,5 +15,9 @@ interface TaskRepository {
     suspend fun updateTask(task: Task)
     suspend fun toggleCompletion(id: String, completed: Boolean)
     suspend fun deleteTask(id: String)
-    suspend fun syncFromRemote(ownerId: String, listId: String)
+    /**
+     * Mantiene sincronizadas las tareas de un dueño (un solo listener por `ownerId`).
+     * Reconcilia atómicamente contra las listas conocidas localmente.
+     */
+    suspend fun syncTasksForOwner(ownerId: String)
 }

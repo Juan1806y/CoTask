@@ -35,6 +35,30 @@ class AuthRepositoryImpl @Inject constructor(
         runAndRegister { authDataSource.signInGoogle(idToken) }
             ?: AuthResult.Error("No se pudo iniciar con Google")
 
+    override suspend fun updateDisplayName(displayName: String): AuthResult {
+        val name = displayName.trim()
+        if (name.isEmpty()) return AuthResult.Error("El nombre no puede estar vacío")
+        return try {
+            val user = authDataSource.updateDisplayName(name)
+            // Reflejar el nuevo nombre en el directorio para invitaciones por email.
+            user.email?.let { email ->
+                runCatching {
+                    userDirectoryRepository.saveProfile(
+                        UserProfile(
+                            uid = user.id,
+                            email = email,
+                            displayName = user.displayName,
+                            photoUrl = user.photoUrl
+                        )
+                    )
+                }
+            }
+            AuthResult.Success(user)
+        } catch (e: Exception) {
+            AuthResult.Error(e.localizedMessage ?: "No se pudo actualizar el perfil")
+        }
+    }
+
     override suspend fun signOut() {
         authDataSource.signOut()
     }

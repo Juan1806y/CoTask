@@ -26,6 +26,8 @@ data class TaskEntity(
     val category: String?,
     val isCompleted: Boolean,
     val dueDate: Long?,
+    val priorityLevel: Int = 0,
+    val assignedTo: String? = null,
     val createdAt: Long,
     val updatedAt: Long
 )

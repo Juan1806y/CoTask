@@ -3,6 +3,7 @@ package com.uni.colabtasks.ui.taskedit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uni.colabtasks.domain.model.Priority
 import com.uni.colabtasks.domain.repository.TaskListRepository
 import com.uni.colabtasks.domain.usecase.task.GetTaskUseCase
 import com.uni.colabtasks.domain.usecase.task.SaveTaskUseCase
@@ -20,6 +21,7 @@ data class TaskEditUiState(
     val description: String = "",
     val category: String = "",
     val dueDate: Long? = null,
+    val priority: Priority = Priority.NONE,
     val isSaving: Boolean = false,
     val isLoading: Boolean = true,
     val saved: Boolean = false,
@@ -60,6 +62,7 @@ class TaskEditViewModel @Inject constructor(
                             description = task.description.orEmpty(),
                             category = task.category.orEmpty(),
                             dueDate = task.dueDate,
+                            priority = task.priority,
                             isLoading = false
                         )
                     }
@@ -76,6 +79,7 @@ class TaskEditViewModel @Inject constructor(
     fun onDescriptionChange(value: String) = _uiState.update { it.copy(description = value) }
     fun onCategoryChange(value: String) = _uiState.update { it.copy(category = value) }
     fun onDueDateChange(value: Long?) = _uiState.update { it.copy(dueDate = value) }
+    fun onPriorityChange(value: Priority) = _uiState.update { it.copy(priority = value) }
     fun consumeError() = _uiState.update { it.copy(errorMessage = null) }
 
     fun save() {
@@ -93,7 +97,8 @@ class TaskEditViewModel @Inject constructor(
                 title = s.title,
                 description = s.description,
                 category = s.category,
-                dueDate = s.dueDate
+                dueDate = s.dueDate,
+                priority = s.priority
             ).onSuccess {
                 _uiState.update { it.copy(isSaving = false, saved = true) }
             }.onFailure { e ->

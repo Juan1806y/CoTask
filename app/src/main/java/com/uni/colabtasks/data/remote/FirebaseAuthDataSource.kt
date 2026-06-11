@@ -47,6 +47,14 @@ class FirebaseAuthDataSource @Inject constructor(
         return result.user?.toDomain() ?: error("Firebase no devolvió un usuario")
     }
 
+    suspend fun updateDisplayName(displayName: String): User {
+        val firebaseUser = auth.currentUser ?: error("Sesión no iniciada")
+        val update = userProfileChangeRequest { this.displayName = displayName }
+        firebaseUser.updateProfile(update).await()
+        firebaseUser.reload().await()
+        return firebaseUser.toDomain().copy(displayName = displayName)
+    }
+
     fun signOut() = auth.signOut()
 
     private fun com.google.firebase.auth.FirebaseUser.toDomain() = User(

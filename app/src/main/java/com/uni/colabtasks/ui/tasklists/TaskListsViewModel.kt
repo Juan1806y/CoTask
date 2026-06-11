@@ -45,6 +45,7 @@ data class TaskListsUiState(
     val items: List<TaskListItem> = emptyList(),
     val showFavoritesOnly: Boolean = false,
     val dialog: TaskListDialogState = TaskListDialogState(),
+    val pendingUndo: TaskList? = null,
     val errorMessage: String? = null
 )
 
@@ -79,12 +80,11 @@ class TaskListsViewModel @Inject constructor(
         viewModelScope.launch {
             items.collect { value ->
                 _uiState.update { it.copy(isLoading = false, items = value) }
-                // Lanza sync de tareas para cada lista visible para que la barra de progreso
-                // del home refleje datos reales sin tener que entrar a la lista primero.
-                // Las llamadas están deduplicadas por (ownerId, listId) en el repositorio,
-                // así que invocarlas repetidamente es seguro y barato.
-                value.forEach { item ->
-                    taskRepository.syncFromRemote(item.list.ownerId, item.list.id)
+                // Sincroniza las tareas de cada dueño presente (deduplicado por ownerId en el
+                // repositorio) para que las barras de progreso del home reflejen datos reales
+                // sin tener que entrar a cada lista.
+                value.map { it.list.ownerId }.distinct().forEach { ownerId ->
+                    taskRepository.syncTasksForOwner(ownerId)
                 }
             }
         }
@@ -170,9 +170,31 @@ class TaskListsViewModel @Inject constructor(
         viewModelScope.launch { toggleFavorite(list.id, !list.isFavorite) }
     }
 
+    // Tareas de la última lista borrada — para restaurarlas junto con la lista en el undo.
+    private var lastDeletedListTasks: List<Task> = emptyList()
+
     fun deleteList(list: TaskList) {
-        viewModelScope.launch { deleteTaskList(list.id) }
+        lastDeletedListTasks = tasksByListSnapshot[list.id].orEmpty()
+        viewModelScope.launch {
+            // No cancelamos el sync del dueño: el listener per-owner reconcilia solo, y filtra
+            // por listas conocidas, así que tras el cascade delete no reinserta tareas huérfanas.
+            deleteTaskList(list.id)
+            _uiState.update { it.copy(pendingUndo = list) }
+        }
     }
+
+    fun undoDeleteList() {
+        val list = _uiState.value.pendingUndo ?: return
+        val tasks = lastDeletedListTasks
+        viewModelScope.launch {
+            taskListRepository.restoreList(list)
+            tasks.forEach { taskRepository.createTask(it) }
+            _uiState.update { it.copy(pendingUndo = null) }
+            lastDeletedListTasks = emptyList()
+        }
+    }
+
+    fun clearUndo() = _uiState.update { it.copy(pendingUndo = null) }
 
     fun consumeError() = _uiState.update { it.copy(errorMessage = null) }
 }

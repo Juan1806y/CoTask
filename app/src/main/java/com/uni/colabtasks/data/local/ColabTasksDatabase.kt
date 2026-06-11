@@ -11,7 +11,7 @@ import com.uni.colabtasks.data.local.entity.TaskListEntity
 
 @Database(
     entities = [TaskListEntity::class, TaskEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

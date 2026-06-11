@@ -105,6 +105,9 @@ dependencies {
     // DataStore (theme preference)
     implementation(libs.androidx.datastore.preferences)
 
+    // WorkManager (due-date reminders)
+    implementation(libs.androidx.work.runtime.ktx)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

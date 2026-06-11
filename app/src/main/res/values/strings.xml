@@ -64,6 +64,25 @@
     <string name="stat_pending">Pendientes</string>
     <string name="stat_done">Completadas</string>
     <string name="empty_tasks">Sin tareas en esta lista todavía.</string>
+    <string name="empty_search">No hay tareas que coincidan con la búsqueda.</string>
+
+    <!-- Priority -->
+    <string name="priority">Prioridad</string>
+    <string name="priority_none">Sin prioridad</string>
+    <string name="priority_low">Baja</string>
+    <string name="priority_medium">Media</string>
+    <string name="priority_high">Alta</string>
+
+    <!-- Sort -->
+    <string name="sort_by">Ordenar por</string>
+    <string name="sort_due_date">Fecha límite</string>
+    <string name="sort_priority">Prioridad</string>
+    <string name="sort_alphabetical">Alfabético</string>
+    <string name="sort_created">Más recientes</string>
+
+    <!-- Search -->
+    <string name="search_tasks">Buscar tareas…</string>
+    <string name="clear_search">Limpiar búsqueda</string>
 
     <!-- Categories -->
     <string name="category_personal">Personal</string>
@@ -87,6 +106,7 @@
     <string name="settings_theme_dark">Oscuro</string>
     <string name="settings_dynamic_color">Color dinámico (Material You)</string>
     <string name="settings_account">Cuenta</string>
+    <string name="edit_profile">Editar perfil</string>
 
     <!-- Common -->
     <string name="save">Guardar</string>
@@ -97,6 +117,14 @@
     <string name="retry">Reintentar</string>
     <string name="loading">Cargando…</string>
     <string name="generic_error">Algo salió mal. Inténtalo de nuevo.</string>
+    <string name="undo">Deshacer</string>
+    <string name="task_deleted">Tarea eliminada</string>
+    <string name="list_deleted">Lista eliminada</string>
+
+    <!-- Reminders -->
+    <string name="reminder_title">Recordatorio de tarea</string>
+    <string name="reminder_channel_name">Recordatorios de tareas</string>
+    <string name="reminder_channel_desc">Notificaciones para tareas con fecha límite</string>
 
     <!-- Firebase / Google sign-in (set the Web Client ID from your Firebase console) -->
     <string name="default_web_client_id">717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com</string>

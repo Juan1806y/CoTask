@@ -4,7 +4,6 @@ import android.util.Log
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.uni.colabtasks.data.remote.dto.TaskDto
 import kotlinx.coroutines.channels.awaitClose
@@ -16,6 +15,15 @@ import javax.inject.Singleton
 
 private const val TAG = "FirebaseTask"
 
+/**
+ * Acceso a las tareas en RTDB bajo `/users/{ownerId}/tasks/{taskId}`.
+ *
+ * NOTA de diseño: no usamos `orderByChild("listId").equalTo(...)` porque eso exige
+ * declarar `".indexOn": "listId"` en las reglas de seguridad (y crashea si falta).
+ * En su lugar leemos todo el nodo de tareas del usuario y filtramos por `listId` en
+ * el cliente. Para una app de tareas personal el volumen es pequeño, así que es
+ * simple y robusto, sin depender de índices remotos.
+ */
 @Singleton
 class FirebaseTaskDataSource @Inject constructor(
     private val rootRef: DatabaseReference
@@ -23,27 +31,26 @@ class FirebaseTaskDataSource @Inject constructor(
     private fun tasksRef(ownerId: String): DatabaseReference =
         rootRef.child("users").child(ownerId).child("tasks")
 
-    fun observeTasks(ownerId: String, listId: String): Flow<List<TaskDto>> = callbackFlow {
-        val query: Query = tasksRef(ownerId).orderByChild("listId").equalTo(listId)
+    /**
+     * Observa TODAS las tareas de un dueño (`/users/{ownerId}/tasks`). El repositorio
+     * reconcilia luego contra las listas conocidas localmente. Un solo listener por dueño
+     * (en vez de uno por lista) evita carreras de reconciliación entre listas.
+     */
+    fun observeOwnerTasks(ownerId: String): Flow<List<TaskDto>> = callbackFlow {
+        val ref = tasksRef(ownerId)
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val items = snapshot.children.mapNotNull { it.getValue(TaskDto::class.java) }
                 trySend(items)
             }
             override fun onCancelled(error: DatabaseError) {
-                // NO emitimos emptyList() — `syncFromRemote` haría deleteByListExcept(listId, [])
-                // que borra TODAS las tareas locales. Solo cerramos.
-                Log.w(TAG, "observeTasks cancelled $ownerId/$listId: ${error.message}")
+                // NO emitimos emptyList(): la reconciliación borraría tareas locales válidas.
+                Log.w(TAG, "observeOwnerTasks cancelled $ownerId: ${error.message}")
                 close()
             }
         }
-        query.addValueEventListener(listener)
-        awaitClose { query.removeEventListener(listener) }
-    }
-
-    suspend fun fetchTasks(ownerId: String, listId: String): List<TaskDto> {
-        val snapshot = tasksRef(ownerId).orderByChild("listId").equalTo(listId).get().await()
-        return snapshot.children.mapNotNull { it.getValue(TaskDto::class.java) }
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
     }
 
     suspend fun upsert(dto: TaskDto) {
@@ -66,8 +73,18 @@ class FirebaseTaskDataSource @Inject constructor(
         tasksRef(ownerId).child(taskId).removeValue().await()
     }
 
+    /**
+     * Borra todas las tareas de una lista. Resiliente: si falla la lectura remota
+     * (permisos, red), loguea y no propaga para no tumbar el flujo de borrado de lista.
+     */
     suspend fun deleteForList(ownerId: String, listId: String) {
-        val snapshot = tasksRef(ownerId).orderByChild("listId").equalTo(listId).get().await()
-        snapshot.children.forEach { it.ref.removeValue().await() }
+        runCatching {
+            val snapshot = tasksRef(ownerId).get().await()
+            snapshot.children
+                .filter { it.getValue(TaskDto::class.java)?.listId == listId }
+                .forEach { it.ref.removeValue().await() }
+        }.onFailure { e ->
+            Log.w(TAG, "deleteForList failed for $ownerId/$listId: ${e.message}")
+        }
     }
 }

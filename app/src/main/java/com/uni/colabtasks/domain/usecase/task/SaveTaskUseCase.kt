@@ -1,5 +1,6 @@
 package com.uni.colabtasks.domain.usecase.task
 
+import com.uni.colabtasks.domain.model.Priority
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.repository.TaskRepository
 import java.util.UUID
@@ -19,7 +20,9 @@ class SaveTaskUseCase @Inject constructor(
         title: String,
         description: String?,
         category: String?,
-        dueDate: Long?
+        dueDate: Long?,
+        priority: Priority = Priority.NONE,
+        assignedTo: String? = null
     ): Result<String> {
         val trimmedTitle = title.trim()
         if (trimmedTitle.isEmpty()) {
@@ -37,6 +40,8 @@ class SaveTaskUseCase @Inject constructor(
                     category = category?.trim()?.takeIf { it.isNotEmpty() },
                     isCompleted = false,
                     dueDate = dueDate,
+                    priority = priority,
+                    assignedTo = assignedTo,
                     createdAt = now,
                     updatedAt = now
                 )
@@ -49,6 +54,8 @@ class SaveTaskUseCase @Inject constructor(
                     description = description?.trim()?.takeIf { it.isNotEmpty() },
                     category = category?.trim()?.takeIf { it.isNotEmpty() },
                     dueDate = dueDate,
+                    priority = priority,
+                    assignedTo = assignedTo,
                     updatedAt = now
                 )
                 repository.updateTask(updated)

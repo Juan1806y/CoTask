@@ -4,6 +4,7 @@ import com.uni.colabtasks.data.local.entity.TaskEntity
 import com.uni.colabtasks.data.local.entity.TaskListEntity
 import com.uni.colabtasks.data.remote.dto.TaskDto
 import com.uni.colabtasks.data.remote.dto.TaskListDto
+import com.uni.colabtasks.domain.model.Priority
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskList
 
@@ -63,6 +64,8 @@ fun TaskEntity.toDomain() = Task(
     category = category,
     isCompleted = isCompleted,
     dueDate = dueDate,
+    priority = Priority.fromLevel(priorityLevel),
+    assignedTo = assignedTo,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -76,6 +79,8 @@ fun Task.toEntity() = TaskEntity(
     category = category,
     isCompleted = isCompleted,
     dueDate = dueDate,
+    priorityLevel = priority.level,
+    assignedTo = assignedTo,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -89,6 +94,8 @@ fun Task.toDto() = TaskDto(
     category = category,
     isCompleted = isCompleted,
     dueDate = dueDate,
+    priorityLevel = priority.level,
+    assignedTo = assignedTo,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -102,6 +109,8 @@ fun TaskDto.toEntity() = TaskEntity(
     category = category,
     isCompleted = isCompleted,
     dueDate = dueDate,
+    priorityLevel = priorityLevel,
+    assignedTo = assignedTo,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

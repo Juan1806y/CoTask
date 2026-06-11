@@ -1,5 +1,6 @@
 package com.uni.colabtasks.data.repository
 
+import android.util.Log
 import com.uni.colabtasks.data.local.dao.TaskListDao
 import com.uni.colabtasks.data.mapper.toDomain
 import com.uni.colabtasks.data.mapper.toDto
@@ -195,14 +196,27 @@ class TaskListRepositoryImpl @Inject constructor(
 
     override suspend fun deleteList(id: String) = withContext(ioDispatcher) {
         val current = dao.findById(id) ?: return@withContext
-        // Clean up shared pointers for all members before deleting.
-        val previousDto = runCatching { remote.fetchList(current.ownerId, id) }.getOrNull()
-        previousDto?.memberIds.orEmpty().forEach { memberUid ->
-            runCatching { remote.removeSharedPointer(memberUid, id) }
-        }
+        // Room es la fuente de verdad: borramos local primero (esto siempre debe ocurrir).
         dao.deleteById(id)
+        // El resto es best-effort hacia remoto; nunca debe tumbar la app si falla.
+        runCatching {
+            val previousDto = remote.fetchList(current.ownerId, id)
+            previousDto?.memberIds.orEmpty().forEach { memberUid ->
+                runCatching { remote.removeSharedPointer(memberUid, id) }
+            }
+        }
         remoteTasks.deleteForList(current.ownerId, id)
-        remote.delete(current.ownerId, id)
+        runCatching { remote.delete(current.ownerId, id) }
+            .onFailure { Log.w(TAG, "remote list delete failed for $id: ${it.message}") }
+    }
+
+    override suspend fun restoreList(list: TaskList) = withContext(ioDispatcher) {
+        val memberIds = resolveContributors(list.ownerId, list.contributors)
+        dao.upsert(list.toEntity())
+        remote.upsert(list.toDto(memberIds = memberIds))
+        memberIds.filter { it != list.ownerId }.forEach { memberUid ->
+            runCatching { remote.addSharedPointer(memberUid, list.id, list.ownerId) }
+        }
     }
 
     override suspend fun syncFromRemote(ownerId: String) = withContext(ioDispatcher) {
@@ -222,5 +236,9 @@ class TaskListRepositoryImpl @Inject constructor(
             if (!uid.isNullOrEmpty() && uid != ownerId) resolved += uid
         }
         return resolved.distinct()
+    }
+
+    private companion object {
+        const val TAG = "TaskListRepository"
     }
 }
