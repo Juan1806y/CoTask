@@ -10,5 +10,8 @@
 .cxx
 local.properties
 
+# Kotlin compiler session artifacts (no deben versionarse)
+.kotlin/
+
 # Firebase: do NOT commit your real google-services.json with secrets
 # (commit the placeholder under app/ only if it has dummy values)

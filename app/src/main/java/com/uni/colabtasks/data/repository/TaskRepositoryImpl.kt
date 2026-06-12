@@ -17,6 +17,7 @@ import com.uni.colabtasks.domain.repository.ActivityRepository
 import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
 import com.uni.colabtasks.reminder.ReminderScheduler
+import com.uni.colabtasks.widget.TaskWidgetNotifier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -37,6 +38,7 @@ class TaskRepositoryImpl @Inject constructor(
     private val reminderScheduler: ReminderScheduler,
     private val activityRepository: ActivityRepository,
     private val authRepository: AuthRepository,
+    private val widgetNotifier: TaskWidgetNotifier,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val externalScope: CoroutineScope
 ) : TaskRepository {
@@ -88,6 +90,7 @@ class TaskRepositoryImpl @Inject constructor(
         remote.upsert(task.toDto())
         reminderScheduler.schedule(task)
         logActivity(task, ActivityAction.CREATED)
+        widgetNotifier.refresh()
         task.id
     }
 
@@ -97,6 +100,7 @@ class TaskRepositoryImpl @Inject constructor(
         remote.upsert(updated.toDto())
         reminderScheduler.schedule(updated)
         logActivity(updated, ActivityAction.EDITED)
+        widgetNotifier.refresh()
     }
 
     override suspend fun toggleCompletion(id: String, completed: Boolean) = withContext(ioDispatcher) {
@@ -107,6 +111,7 @@ class TaskRepositoryImpl @Inject constructor(
         // Completar cancela el recordatorio; reabrir lo reprograma.
         reminderScheduler.schedule(task.toDomain())
         logActivity(task.toDomain(), if (completed) ActivityAction.COMPLETED else ActivityAction.REOPENED)
+        widgetNotifier.refresh()
 
         // Tareas recurrentes: al completarse, genera la siguiente ocurrencia.
         if (completed) {
@@ -132,6 +137,7 @@ class TaskRepositoryImpl @Inject constructor(
         remote.delete(task.ownerId, id)
         reminderScheduler.cancel(id)
         logActivity(task.toDomain(), ActivityAction.DELETED)
+        widgetNotifier.refresh()
     }
 
     override suspend fun syncTasksForOwner(ownerId: String) = withContext(ioDispatcher) {

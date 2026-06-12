@@ -189,4 +189,19 @@
     <string name="biometric_prompt_subtitle">Use your fingerprint or face to continue</string>
     <string name="biometric_unavailable">Biometrics not available on this device</string>
     <string name="unlock">Unlock</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_title">My tasks today</string>
+    <string name="widget_description">Shows your pending tasks for today.</string>
+    <string name="widget_empty">No tasks for today 🎉</string>
+
+    <!-- Statistics -->
+    <string name="menu_stats">Statistics</string>
+    <string name="stats_title">Statistics</string>
+    <string name="stats_overview">Overview</string>
+    <string name="stats_completion_rate">Completion rate</string>
+    <string name="stats_weekly_title">Completed per week</string>
+    <string name="stats_weekly_subtitle">Last 6 weeks</string>
+    <string name="stats_empty">Not enough data to display yet.</string>
+    <string name="stats_week_label">Wk %1$d</string>
 </resources>

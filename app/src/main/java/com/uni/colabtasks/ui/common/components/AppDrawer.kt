@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Settings
@@ -53,6 +54,12 @@ fun AppDrawerContent(
                 icon = Icons.Outlined.CalendarMonth,
                 selected = current == DrawerSection.CALENDAR,
                 onClick = { onSelect(DrawerSection.CALENDAR) }
+            )
+            DrawerEntry(
+                label = stringResource(R.string.menu_stats),
+                icon = Icons.Outlined.BarChart,
+                selected = current == DrawerSection.STATS,
+                onClick = { onSelect(DrawerSection.STATS) }
             )
             DrawerEntry(
                 label = stringResource(R.string.menu_settings),

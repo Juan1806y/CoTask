@@ -39,6 +39,9 @@ workManager = "2.10.0"
 # Biometric
 biometric = "1.1.0"
 
+# Glance (home-screen widgets)
+glance = "1.1.1"
+
 # Testing
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -95,6 +98,10 @@ androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx"
 
 # Biometric
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+
+# Glance
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

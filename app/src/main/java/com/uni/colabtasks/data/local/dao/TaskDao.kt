@@ -54,6 +54,19 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     suspend fun findById(id: String): TaskEntity?
 
+    /**
+     * Tareas pendientes con fecha límite dentro de un rango (para el widget "hoy").
+     * Es un Flow observable: el widget recompone solo cuando cambian las tareas en Room.
+     */
+    @Query("""
+        SELECT t.* FROM tasks t
+        INNER JOIN task_lists tl ON t.listId = tl.id
+        WHERE t.isCompleted = 0 AND t.dueDate IS NOT NULL
+          AND t.dueDate >= :start AND t.dueDate < :end
+        ORDER BY t.dueDate ASC
+    """)
+    fun tasksDueBetweenFlow(start: Long, end: Long): Flow<List<TaskEntity>>
+
     @Upsert
     suspend fun upsert(entity: TaskEntity)
 

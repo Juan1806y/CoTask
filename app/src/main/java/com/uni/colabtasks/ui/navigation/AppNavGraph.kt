@@ -24,6 +24,7 @@ import com.uni.colabtasks.ui.calendar.CalendarScreen
 import com.uni.colabtasks.ui.common.components.AppDrawerContent
 import com.uni.colabtasks.ui.common.components.LoadingIndicator
 import com.uni.colabtasks.ui.settings.SettingsScreen
+import com.uni.colabtasks.ui.stats.StatsScreen
 import com.uni.colabtasks.ui.taskedit.TaskEditScreen
 import com.uni.colabtasks.ui.tasklists.TaskListsScreen
 import com.uni.colabtasks.ui.tasks.TasksScreen
@@ -119,6 +120,13 @@ private fun AppGraphContent(
                 onOpenTask = { task ->
                     navController.navigate(Destinations.taskEdit(task.listId, task.id))
                 }
+            )
+        }
+
+        composable(Destinations.STATS) {
+            StatsScreen(
+                onMenuClick = onOpenDrawer,
+                onProfileClick = { navigateToDrawerSection(navController, DrawerSection.SETTINGS) }
             )
         }
 

@@ -7,6 +7,7 @@ object Destinations {
     // Drawer-level destinations
     const val TASK_LISTS = "task_lists"
     const val CALENDAR = "calendar"
+    const val STATS = "stats"
     const val SETTINGS = "settings"
 
     // tasks/{listId}
@@ -28,6 +29,7 @@ object Destinations {
 enum class DrawerSection(val route: String) {
     LISTS(Destinations.TASK_LISTS),
     CALENDAR(Destinations.CALENDAR),
+    STATS(Destinations.STATS),
     SETTINGS(Destinations.SETTINGS);
 
     companion object {

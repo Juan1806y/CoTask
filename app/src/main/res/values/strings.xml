@@ -190,6 +190,21 @@
     <string name="biometric_unavailable">Biometría no disponible en este dispositivo</string>
     <string name="unlock">Desbloquear</string>
 
+    <!-- Widget de pantalla de inicio -->
+    <string name="widget_title">Mis tareas de hoy</string>
+    <string name="widget_description">Muestra tus tareas pendientes para hoy.</string>
+    <string name="widget_empty">Sin tareas para hoy 🎉</string>
+
+    <!-- Estadísticas -->
+    <string name="menu_stats">Estadísticas</string>
+    <string name="stats_title">Estadísticas</string>
+    <string name="stats_overview">Resumen</string>
+    <string name="stats_completion_rate">Tasa de cumplimiento</string>
+    <string name="stats_weekly_title">Completadas por semana</string>
+    <string name="stats_weekly_subtitle">Últimas 6 semanas</string>
+    <string name="stats_empty">Aún no hay datos suficientes para mostrar.</string>
+    <string name="stats_week_label">Sem %1$d</string>
+
     <!-- Firebase / Google sign-in (set the Web Client ID from your Firebase console) -->
     <string name="default_web_client_id" translatable="false">717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com</string>
 </resources>
