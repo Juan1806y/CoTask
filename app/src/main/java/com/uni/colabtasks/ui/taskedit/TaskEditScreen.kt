@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -52,7 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
+import com.uni.colabtasks.domain.model.Comment
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.ui.util.formatShortDate
 import com.uni.colabtasks.ui.util.priorityColor
 import com.uni.colabtasks.ui.util.priorityLabel
 import com.uni.colabtasks.domain.model.TaskCategory
@@ -85,9 +91,12 @@ fun TaskEditScreen(
             LoadingIndicator(Modifier.padding(innerPadding))
             return@Scaffold
         }
-        Box(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
             TaskEditCard(
                 isEditing = viewModel.isEditing,
@@ -96,15 +105,31 @@ fun TaskEditScreen(
                 category = state.category,
                 dueDate = state.dueDate,
                 priority = state.priority,
+                members = state.members,
+                assignedTo = state.assignedTo,
                 isSaving = state.isSaving,
                 onTitleChange = viewModel::onTitleChange,
                 onDescriptionChange = viewModel::onDescriptionChange,
                 onCategoryChange = viewModel::onCategoryChange,
                 onDateChange = viewModel::onDueDateChange,
                 onPriorityChange = viewModel::onPriorityChange,
+                onAssigneeChange = viewModel::onAssigneeChange,
                 onSave = viewModel::save,
                 onCancel = onBack
             )
+
+            // Comentarios (solo para tareas existentes)
+            if (viewModel.isEditing) {
+                Spacer(Modifier.size(16.dp))
+                CommentsSection(
+                    comments = state.comments,
+                    draft = state.commentDraft,
+                    currentUid = state.currentUid,
+                    onDraftChange = viewModel::onCommentDraftChange,
+                    onSend = viewModel::sendComment,
+                    onDelete = viewModel::deleteComment
+                )
+            }
         }
     }
 }
@@ -118,12 +143,15 @@ private fun TaskEditCard(
     category: String,
     dueDate: Long?,
     priority: Priority,
+    members: List<com.uni.colabtasks.domain.model.ListMember>,
+    assignedTo: String?,
     isSaving: Boolean,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
     onDateChange: (Long?) -> Unit,
     onPriorityChange: (Priority) -> Unit,
+    onAssigneeChange: (String?) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -199,6 +227,16 @@ private fun TaskEditCard(
             Spacer(Modifier.size(14.dp))
 
             PrioritySelector(selected = priority, onSelect = onPriorityChange)
+
+            // Selector de asignación (solo si la lista tiene más de un miembro)
+            if (members.size > 1) {
+                Spacer(Modifier.size(14.dp))
+                AssigneePicker(
+                    members = members,
+                    assignedTo = assignedTo,
+                    onSelect = onAssigneeChange
+                )
+            }
 
             Spacer(Modifier.size(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -319,6 +357,137 @@ private fun PrioritySelector(selected: Priority, onSelect: (Priority) -> Unit) {
                         selectedLabelColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AssigneePicker(
+    members: List<com.uni.colabtasks.domain.model.ListMember>,
+    assignedTo: String?,
+    onSelect: (String?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedLabel = members.firstOrNull { it.uid == assignedTo }?.label
+        ?: stringResource(R.string.unassigned)
+
+    Column {
+        Text(
+            text = stringResource(R.string.assign_to),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.size(6.dp))
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+            OutlinedTextField(
+                value = selectedLabel,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+            )
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.unassigned)) },
+                    onClick = { onSelect(null); expanded = false }
+                )
+                members.forEach { member ->
+                    DropdownMenuItem(
+                        text = { Text(member.label) },
+                        onClick = { onSelect(member.uid); expanded = false }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommentsSection(
+    comments: List<Comment>,
+    draft: String,
+    currentUid: String?,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onDelete: (String) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.comments_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.size(8.dp))
+
+            if (comments.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.empty_comments),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                comments.forEach { comment ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row {
+                                Text(
+                                    text = comment.authorName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.size(6.dp))
+                                Text(
+                                    text = formatShortDate(comment.timestamp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(text = comment.text, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (comment.authorUid == currentUid) {
+                            IconButton(onClick = { onDelete(comment.id) }, modifier = Modifier.size(28.dp)) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.delete),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = draft,
+                    onValueChange = onDraftChange,
+                    placeholder = { Text(stringResource(R.string.comment_hint)) },
+                    modifier = Modifier.weight(1f),
+                    maxLines = 3
+                )
+                IconButton(onClick = onSend, enabled = draft.isNotBlank()) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.Send,
+                        contentDescription = stringResource(R.string.send),
+                        tint = if (draft.isNotBlank()) MaterialTheme.colorScheme.primary
+                              else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

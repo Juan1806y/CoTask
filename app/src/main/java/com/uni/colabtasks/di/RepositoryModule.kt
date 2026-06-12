@@ -1,11 +1,15 @@
 package com.uni.colabtasks.di
 
 import com.uni.colabtasks.data.preferences.PreferencesRepositoryImpl
+import com.uni.colabtasks.data.repository.ActivityRepositoryImpl
 import com.uni.colabtasks.data.repository.AuthRepositoryImpl
+import com.uni.colabtasks.data.repository.CommentRepositoryImpl
 import com.uni.colabtasks.data.repository.TaskListRepositoryImpl
 import com.uni.colabtasks.data.repository.TaskRepositoryImpl
 import com.uni.colabtasks.data.repository.UserDirectoryRepositoryImpl
+import com.uni.colabtasks.domain.repository.ActivityRepository
 import com.uni.colabtasks.domain.repository.AuthRepository
+import com.uni.colabtasks.domain.repository.CommentRepository
 import com.uni.colabtasks.domain.repository.PreferencesRepository
 import com.uni.colabtasks.domain.repository.TaskListRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
@@ -39,4 +43,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUserDirectoryRepository(impl: UserDirectoryRepositoryImpl): UserDirectoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindActivityRepository(impl: ActivityRepositoryImpl): ActivityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCommentRepository(impl: CommentRepositoryImpl): CommentRepository
 }

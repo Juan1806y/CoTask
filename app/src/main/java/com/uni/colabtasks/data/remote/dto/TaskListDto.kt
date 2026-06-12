@@ -9,8 +9,10 @@ data class TaskListDto(
     var name: String = "",
     var description: String? = null,
     var isFavorite: Boolean = false,
-    var contributors: List<String> = emptyList(),
-    var memberIds: List<String> = emptyList(),
+    var contributors: List<String> = emptyList(),   // editor emails
+    var viewerEmails: List<String> = emptyList(),    // viewer emails
+    var memberIds: List<String> = emptyList(),       // editor uids
+    var viewerIds: List<String> = emptyList(),       // viewer uids
     var createdAt: Long = 0L,
     var updatedAt: Long = 0L
 )

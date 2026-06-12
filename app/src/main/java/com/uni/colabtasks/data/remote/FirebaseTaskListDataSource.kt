@@ -5,6 +5,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import com.uni.colabtasks.data.remote.dto.InvitationDto
 import com.uni.colabtasks.data.remote.dto.SharedListPointerDto
 import com.uni.colabtasks.data.remote.dto.TaskListDto
 import kotlinx.coroutines.channels.awaitClose
@@ -77,6 +78,62 @@ class FirebaseTaskListDataSource @Inject constructor(
 
     suspend fun delete(ownerId: String, listId: String) {
         listsRef(ownerId).child(listId).removeValue().await()
+    }
+
+    /**
+     * Agrega un uid a la lista de miembros (editor o viewer) de una lista existente.
+     * Usado al ACEPTAR una invitación.
+     */
+    suspend fun addMemberUid(ownerId: String, listId: String, uid: String, asViewer: Boolean) {
+        val dto = fetchList(ownerId, listId) ?: return
+        if (asViewer) {
+            if (uid !in dto.viewerIds) dto.viewerIds = dto.viewerIds + uid
+        } else {
+            if (uid !in dto.memberIds) dto.memberIds = dto.memberIds + uid
+        }
+        dto.updatedAt = System.currentTimeMillis()
+        listsRef(ownerId).child(listId).setValue(dto).await()
+    }
+
+    /** Quita un uid de los miembros (editor y viewer) de una lista. */
+    suspend fun removeMemberUid(ownerId: String, listId: String, uid: String) {
+        val dto = fetchList(ownerId, listId) ?: return
+        dto.memberIds = dto.memberIds - uid
+        dto.viewerIds = dto.viewerIds - uid
+        dto.updatedAt = System.currentTimeMillis()
+        listsRef(ownerId).child(listId).setValue(dto).await()
+    }
+
+    // ---------- Invitations (en el árbol del invitado) ----------
+    //   /users/{inviteeUid}/invitations/{listId}
+
+    private fun invitationsRef(inviteeUid: String): DatabaseReference =
+        rootRef.child("users").child(inviteeUid).child("invitations")
+
+    suspend fun createInvitation(inviteeUid: String, dto: InvitationDto) {
+        invitationsRef(inviteeUid).child(dto.listId).setValue(dto).await()
+    }
+
+    suspend fun deleteInvitation(inviteeUid: String, listId: String) {
+        invitationsRef(inviteeUid).child(listId).removeValue().await()
+    }
+
+    fun observeInvitations(inviteeUid: String): Flow<List<InvitationDto>> = callbackFlow {
+        val ref = invitationsRef(inviteeUid)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val items = snapshot.children
+                    .mapNotNull { it.getValue(InvitationDto::class.java) }
+                    .sortedByDescending { it.timestamp }
+                trySend(items)
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.w(TAG, "observeInvitations cancelled for $inviteeUid: ${error.message}")
+                close()
+            }
+        }
+        ref.addValueEventListener(listener)
+        awaitClose { ref.removeEventListener(listener) }
     }
 
     // ---------- Shared list pointers ----------

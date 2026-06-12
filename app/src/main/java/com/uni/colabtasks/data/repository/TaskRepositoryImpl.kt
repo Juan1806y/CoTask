@@ -7,9 +7,12 @@ import com.uni.colabtasks.data.mapper.toDto
 import com.uni.colabtasks.data.mapper.toEntity
 import com.uni.colabtasks.data.remote.FirebaseTaskDataSource
 import com.uni.colabtasks.di.IoDispatcher
+import com.uni.colabtasks.domain.model.ActivityAction
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskCounts
 import com.uni.colabtasks.domain.model.TaskFilter
+import com.uni.colabtasks.domain.repository.ActivityRepository
+import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
 import com.uni.colabtasks.reminder.ReminderScheduler
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,11 +32,29 @@ class TaskRepositoryImpl @Inject constructor(
     private val dao: TaskDao,
     private val remote: FirebaseTaskDataSource,
     private val reminderScheduler: ReminderScheduler,
+    private val activityRepository: ActivityRepository,
+    private val authRepository: AuthRepository,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val externalScope: CoroutineScope
 ) : TaskRepository {
 
     private val syncJobs = ConcurrentHashMap<String, Job>()
+
+    /** Registra actividad de forma best-effort (nunca debe romper la operación principal). */
+    private suspend fun logActivity(task: Task, action: ActivityAction) {
+        val actorUid = authRepository.getCurrentUserId() ?: return
+        val actorName = authRepository.getCurrentDisplayName() ?: "Alguien"
+        runCatching {
+            activityRepository.log(
+                listOwnerId = task.ownerId,
+                listId = task.listId,
+                actorUid = actorUid,
+                actorName = actorName,
+                action = action,
+                targetTitle = task.title
+            )
+        }
+    }
 
     override fun observeTasks(listId: String, filter: TaskFilter): Flow<List<Task>> {
         val source = when (filter) {
@@ -63,6 +84,7 @@ class TaskRepositoryImpl @Inject constructor(
         dao.upsert(task.toEntity())
         remote.upsert(task.toDto())
         reminderScheduler.schedule(task)
+        logActivity(task, ActivityAction.CREATED)
         task.id
     }
 
@@ -71,6 +93,7 @@ class TaskRepositoryImpl @Inject constructor(
         dao.upsert(updated.toEntity())
         remote.upsert(updated.toDto())
         reminderScheduler.schedule(updated)
+        logActivity(updated, ActivityAction.EDITED)
     }
 
     override suspend fun toggleCompletion(id: String, completed: Boolean) = withContext(ioDispatcher) {
@@ -80,6 +103,7 @@ class TaskRepositoryImpl @Inject constructor(
         remote.setCompletion(task.ownerId, id, completed, now)
         // Completar cancela el recordatorio; reabrir lo reprograma.
         reminderScheduler.schedule(task.toDomain())
+        logActivity(task.toDomain(), if (completed) ActivityAction.COMPLETED else ActivityAction.REOPENED)
     }
 
     override suspend fun deleteTask(id: String) = withContext(ioDispatcher) {
@@ -87,6 +111,7 @@ class TaskRepositoryImpl @Inject constructor(
         dao.deleteById(id)
         remote.delete(task.ownerId, id)
         reminderScheduler.cancel(id)
+        logActivity(task.toDomain(), ActivityAction.DELETED)
     }
 
     override suspend fun syncTasksForOwner(ownerId: String) = withContext(ioDispatcher) {

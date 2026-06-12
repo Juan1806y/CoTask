@@ -18,6 +18,10 @@ class FirebaseAuthDataSource @Inject constructor(
 ) {
     fun currentUserId(): String? = auth.currentUser?.uid
 
+    fun currentDisplayName(): String? =
+        auth.currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: auth.currentUser?.email?.substringBefore('@')
+
     fun observeUser(): Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             trySend(firebaseAuth.currentUser?.toDomain())

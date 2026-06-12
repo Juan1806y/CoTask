@@ -20,6 +20,8 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun getCurrentUserId(): String? = authDataSource.currentUserId()
 
+    override fun getCurrentDisplayName(): String? = authDataSource.currentDisplayName()
+
     override suspend fun signInWithEmail(email: String, password: String): AuthResult =
         runAndRegister { authDataSource.signInEmail(email, password) }
             ?: AuthResult.Error("No se pudo iniciar sesión")

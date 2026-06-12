@@ -8,6 +8,7 @@ import com.uni.colabtasks.domain.model.TaskCounts
 import com.uni.colabtasks.domain.model.TaskFilter
 import com.uni.colabtasks.domain.model.TaskList
 import com.uni.colabtasks.domain.model.TaskSort
+import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.TaskListRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
 import com.uni.colabtasks.domain.usecase.task.DeleteTaskUseCase
@@ -15,6 +16,7 @@ import com.uni.colabtasks.domain.usecase.task.ObserveTaskCountsUseCase
 import com.uni.colabtasks.domain.usecase.task.ObserveTasksUseCase
 import com.uni.colabtasks.domain.usecase.task.SaveTaskUseCase
 import com.uni.colabtasks.domain.usecase.task.ToggleTaskCompletionUseCase
+import com.uni.colabtasks.domain.usecase.tasklist.GetListMembersUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.ToggleFavoriteUseCase
 import com.uni.colabtasks.ui.navigation.Destinations
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,6 +42,8 @@ data class TasksUiState(
     val sort: TaskSort = TaskSort.DUE_DATE,
     val counts: TaskCounts = TaskCounts.Empty,
     val list: TaskList? = null,
+    val memberNames: Map<String, String> = emptyMap(),
+    val canEdit: Boolean = true,
     val pendingUndo: Task? = null,
     val errorMessage: String? = null
 )
@@ -48,6 +52,7 @@ data class TasksUiState(
 @HiltViewModel
 class TasksViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val authRepository: AuthRepository,
     private val taskListRepository: TaskListRepository,
     private val taskRepository: TaskRepository,
     observeTasks: ObserveTasksUseCase,
@@ -55,7 +60,8 @@ class TasksViewModel @Inject constructor(
     private val toggleCompletion: ToggleTaskCompletionUseCase,
     private val deleteTaskUseCase: DeleteTaskUseCase,
     private val saveTaskUseCase: SaveTaskUseCase,
-    private val toggleFavorite: ToggleFavoriteUseCase
+    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val getListMembers: GetListMembersUseCase
 ) : ViewModel() {
 
     val listId: String = checkNotNull(savedStateHandle[Destinations.ARG_LIST_ID])
@@ -98,10 +104,17 @@ class TasksViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            val currentUid = authRepository.getCurrentUserId()
             taskListRepository.observeList(listId).collect { list ->
-                _uiState.update { it.copy(list = list) }
+                val canEdit = list?.canEditTasks(currentUid) ?: true
+                _uiState.update { it.copy(list = list, canEdit = canEdit) }
                 list?.ownerId?.let { ownerId ->
                     taskRepository.syncTasksForOwner(ownerId)
+                }
+                // Resolver nombres de miembros para mostrar el asignado (una sola vez por lista).
+                if (list != null && _uiState.value.memberNames.isEmpty()) {
+                    val members = runCatching { getListMembers(list) }.getOrDefault(emptyList())
+                    _uiState.update { st -> st.copy(memberNames = members.associate { m -> m.uid to m.label }) }
                 }
             }
         }

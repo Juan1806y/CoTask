@@ -10,23 +10,24 @@ class CreateTaskListUseCase @Inject constructor(
         ownerId: String,
         name: String,
         description: String?,
-        contributors: List<String>
+        editorEmails: List<String>,
+        viewerEmails: List<String>
     ): Result<String> {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) {
             return Result.failure(IllegalArgumentException("El nombre no puede estar vacío"))
         }
-        val cleanContributors = contributors
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && it.contains('@') }
-            .distinct()
         return runCatching {
             repository.createList(
                 ownerId = ownerId,
                 name = trimmedName,
                 description = description?.trim()?.takeIf { it.isNotEmpty() },
-                contributors = cleanContributors
+                editorEmails = cleanEmails(editorEmails),
+                viewerEmails = cleanEmails(viewerEmails)
             )
         }
     }
+
+    private fun cleanEmails(emails: List<String>): List<String> =
+        emails.map { it.trim() }.filter { it.isNotEmpty() && it.contains('@') }.distinct()
 }

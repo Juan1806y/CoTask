@@ -19,6 +19,10 @@ object Destinations {
     const val ARG_TASK_ID = "taskId"
     fun taskEdit(listId: String, taskId: String? = null): String =
         if (taskId == null) "task_edit/$listId" else "task_edit/$listId?taskId=$taskId"
+
+    // activity/{listId}
+    const val ACTIVITY_ROUTE = "activity/{listId}"
+    fun activity(listId: String) = "activity/$listId"
 }
 
 enum class DrawerSection(val route: String) {

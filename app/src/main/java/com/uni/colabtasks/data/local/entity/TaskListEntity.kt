@@ -15,6 +15,9 @@ data class TaskListEntity(
     val description: String?,
     val isFavorite: Boolean,
     val contributors: List<String>,
+    val viewerEmails: List<String>,
+    val memberIds: List<String>,
+    val viewerIds: List<String>,
     val createdAt: Long,
     val updatedAt: Long
 )

@@ -10,23 +10,24 @@ class UpdateTaskListUseCase @Inject constructor(
         id: String,
         name: String,
         description: String?,
-        contributors: List<String>
+        editorEmails: List<String>,
+        viewerEmails: List<String>
     ): Result<Unit> {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) {
             return Result.failure(IllegalArgumentException("El nombre no puede estar vacío"))
         }
-        val cleanContributors = contributors
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && it.contains('@') }
-            .distinct()
         return runCatching {
             repository.updateList(
                 id = id,
                 name = trimmedName,
                 description = description?.trim()?.takeIf { it.isNotEmpty() },
-                contributors = cleanContributors
+                editorEmails = cleanEmails(editorEmails),
+                viewerEmails = cleanEmails(viewerEmails)
             )
         }
     }
+
+    private fun cleanEmails(emails: List<String>): List<String> =
+        emails.map { it.trim() }.filter { it.isNotEmpty() && it.contains('@') }.distinct()
 }

@@ -17,6 +17,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.uni.colabtasks.ui.auth.AuthGateViewModel
+import com.uni.colabtasks.ui.activity.ActivityScreen
 import com.uni.colabtasks.ui.auth.login.LoginScreen
 import com.uni.colabtasks.ui.auth.signup.SignUpScreen
 import com.uni.colabtasks.ui.calendar.CalendarScreen
@@ -140,7 +141,8 @@ private fun AppGraphContent(
             TasksScreen(
                 onBack = { navController.popBackStack() },
                 onAddTask = { navController.navigate(Destinations.taskEdit(listId)) },
-                onEditTask = { taskId -> navController.navigate(Destinations.taskEdit(listId, taskId)) }
+                onEditTask = { taskId -> navController.navigate(Destinations.taskEdit(listId, taskId)) },
+                onOpenActivity = { navController.navigate(Destinations.activity(listId)) }
             )
         }
 
@@ -159,6 +161,13 @@ private fun AppGraphContent(
                 onBack = { navController.popBackStack() },
                 onSaved = { navController.popBackStack() }
             )
+        }
+
+        composable(
+            route = Destinations.ACTIVITY_ROUTE,
+            arguments = listOf(navArgument(Destinations.ARG_LIST_ID) { type = NavType.StringType })
+        ) {
+            ActivityScreen(onBack = { navController.popBackStack() })
         }
     }
 }

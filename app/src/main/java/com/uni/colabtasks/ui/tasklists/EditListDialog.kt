@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.uni.colabtasks.R
+import com.uni.colabtasks.domain.model.MemberRole
 
 @Composable
 fun EditListDialog(
@@ -41,6 +43,7 @@ fun EditListDialog(
     onNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onContributorEmailChange: (String) -> Unit,
+    onContributorRoleChange: (MemberRole) -> Unit,
     onAddContributor: () -> Unit,
     onRemoveContributor: (String) -> Unit,
     onConfirm: () -> Unit,
@@ -107,6 +110,20 @@ fun EditListDialog(
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(6.dp))
+                // Selector de rol para el próximo contribuyente
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = state.newContributorRole == MemberRole.EDITOR,
+                        onClick = { onContributorRoleChange(MemberRole.EDITOR) },
+                        label = { Text(stringResource(R.string.role_editor)) }
+                    )
+                    FilterChip(
+                        selected = state.newContributorRole == MemberRole.VIEWER,
+                        onClick = { onContributorRoleChange(MemberRole.VIEWER) },
+                        label = { Text(stringResource(R.string.role_viewer)) }
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = state.newContributorEmail,
@@ -126,10 +143,14 @@ fun EditListDialog(
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.heightIn(max = 140.dp)
                     ) {
-                        items(state.contributors, key = { it }) { email ->
+                        items(state.contributors, key = { it.email }) { contributor ->
+                            val roleLabel = stringResource(
+                                if (contributor.role == MemberRole.VIEWER) R.string.role_viewer
+                                else R.string.role_editor
+                            )
                             AssistChip(
-                                onClick = { onRemoveContributor(email) },
-                                label = { Text(email) },
+                                onClick = { onRemoveContributor(contributor.email) },
+                                label = { Text("${contributor.email} · $roleLabel") },
                                 trailingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) }
                             )
                         }

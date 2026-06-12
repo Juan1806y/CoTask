@@ -38,8 +38,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
+import com.uni.colabtasks.domain.model.Invitation
+import com.uni.colabtasks.domain.model.MemberRole
 import com.uni.colabtasks.ui.common.components.EmptyState
 import com.uni.colabtasks.ui.common.components.LoadingIndicator
 import com.uni.colabtasks.ui.util.shareList
@@ -124,6 +128,13 @@ fun TaskListsScreen(
                 count = state.items.size,
                 onNewList = viewModel::openCreateDialog
             )
+            if (state.invitations.isNotEmpty()) {
+                InvitationsSection(
+                    invitations = state.invitations,
+                    onAccept = viewModel::accept,
+                    onReject = viewModel::reject
+                )
+            }
             FavoritesToggleRow(
                 checked = state.showFavoritesOnly,
                 onChange = { viewModel.toggleFavoritesFilter() }
@@ -144,6 +155,7 @@ fun TaskListsScreen(
                         items(items = state.items, key = { it.list.id }) { item ->
                             TaskListCard(
                                 item = item,
+                                isOwner = item.list.ownerId == state.currentUserId,
                                 onOpen = { onOpenList(item.list.id) },
                                 onEdit = { viewModel.openEditDialog(item.list) },
                                 onDelete = { viewModel.deleteList(item.list) },
@@ -165,6 +177,7 @@ fun TaskListsScreen(
                 onNameChange = viewModel::onNameChange,
                 onDescriptionChange = viewModel::onDescriptionChange,
                 onContributorEmailChange = viewModel::onContributorEmailChange,
+                onContributorRoleChange = viewModel::onContributorRoleChange,
                 onAddContributor = viewModel::addContributor,
                 onRemoveContributor = viewModel::removeContributor,
                 onConfirm = viewModel::confirmDialog,
@@ -209,6 +222,66 @@ private fun ListsHeader(count: Int, onNewList: () -> Unit) {
 }
 
 @Composable
+private fun InvitationsSection(
+    invitations: List<Invitation>,
+    onAccept: (Invitation) -> Unit,
+    onReject: (Invitation) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Text(
+            text = stringResource(R.string.invitations_title),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.size(6.dp))
+        invitations.forEach { invitation ->
+            val roleLabel = stringResource(
+                when (invitation.role) {
+                    MemberRole.VIEWER -> R.string.role_viewer
+                    else -> R.string.role_editor
+                }
+            )
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = stringResource(
+                            R.string.invitation_text,
+                            invitation.inviterName,
+                            invitation.listName,
+                            roleLabel
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = { onReject(invitation) }) {
+                            Text(stringResource(R.string.reject))
+                        }
+                        Spacer(Modifier.size(4.dp))
+                        Button(
+                            onClick = { onAccept(invitation) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text(stringResource(R.string.accept))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun FavoritesToggleRow(checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
@@ -228,6 +301,7 @@ private fun FavoritesToggleRow(checked: Boolean, onChange: (Boolean) -> Unit) {
 @Composable
 private fun TaskListCard(
     item: TaskListItem,
+    isOwner: Boolean,
     onOpen: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
@@ -294,11 +368,14 @@ private fun TaskListCard(
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.edit_task))
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+                    // Solo el propietario puede editar o borrar la lista.
+                    if (isOwner) {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Outlined.Edit, contentDescription = stringResource(R.string.edit_task))
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete))
+                        }
                     }
                     IconButton(onClick = onShare) {
                         Icon(Icons.Outlined.Share, contentDescription = stringResource(R.string.share))

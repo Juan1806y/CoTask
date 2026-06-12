@@ -30,6 +30,8 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,6 +90,7 @@ fun TasksScreen(
     onBack: () -> Unit,
     onAddTask: () -> Unit,
     onEditTask: (String) -> Unit,
+    onOpenActivity: () -> Unit,
     viewModel: TasksViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -121,6 +124,9 @@ fun TasksScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onOpenActivity) {
+                        Icon(Icons.Outlined.History, contentDescription = stringResource(R.string.activity_title))
+                    }
                     SortMenu(current = state.sort, onSelect = viewModel::setSort)
                     IconButton(onClick = viewModel::toggleListFavorite) {
                         Icon(
@@ -155,8 +161,10 @@ fun TasksScreen(
                     onSelect = viewModel::setCategory
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            NewTaskButton(onClick = onAddTask)
+            if (state.canEdit) {
+                Spacer(Modifier.height(8.dp))
+                NewTaskButton(onClick = onAddTask)
+            }
             Spacer(Modifier.height(8.dp))
             Box(modifier = Modifier.fillMaxSize()) {
                 when {
@@ -174,6 +182,8 @@ fun TasksScreen(
                         items(items = state.tasks, key = { it.id }) { task ->
                             TaskCard(
                                 task = task,
+                                assigneeName = task.assignedTo?.let { state.memberNames[it] },
+                                canEdit = state.canEdit,
                                 onClick = { onEditTask(task.id) },
                                 onToggle = { viewModel.toggle(task) },
                                 onDelete = { viewModel.delete(task) }
@@ -392,6 +402,8 @@ private fun NewTaskButton(onClick: () -> Unit) {
 @Composable
 private fun TaskCard(
     task: Task,
+    assigneeName: String?,
+    canEdit: Boolean,
     onClick: () -> Unit,
     onToggle: () -> Unit,
     onDelete: () -> Unit
@@ -427,7 +439,8 @@ private fun TaskCard(
             ) {
                 Checkbox(
                     checked = task.isCompleted,
-                    onCheckedChange = { onToggle() }
+                    onCheckedChange = { onToggle() },
+                    enabled = canEdit
                 )
                 CategoryThumbnail(category = task.category)
                 Spacer(Modifier.size(8.dp))
@@ -485,13 +498,32 @@ private fun TaskCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    if (assigneeName != null) {
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Outlined.PersonOutline,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(Modifier.size(4.dp))
+                            Text(
+                                text = assigneeName,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (canEdit) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

@@ -38,6 +38,41 @@ class FirebaseUserDirectoryDataSource @Inject constructor(
         return snapshot.getValue(UserProfileDto::class.java)
     }
 
+    // ----- Pending invites (emails que aún no tienen cuenta) -----
+    //   /pendingInvites/{emailKey}/{listId}: { ownerId, role }
+
+    suspend fun addPendingInvite(email: String, listId: String, ownerId: String, role: String) {
+        val emailKey = emailToKey(email)
+        if (emailKey.isEmpty()) return
+        rootRef.child("pendingInvites").child(emailKey).child(listId)
+            .setValue(mapOf("ownerId" to ownerId, "role" to role)).await()
+    }
+
+    suspend fun removePendingInvite(email: String, listId: String) {
+        val emailKey = emailToKey(email)
+        if (emailKey.isEmpty()) return
+        rootRef.child("pendingInvites").child(emailKey).child(listId).removeValue().await()
+    }
+
+    /** Devuelve (listId, ownerId, role) de cada invitación pendiente para un email. */
+    suspend fun fetchPendingInvites(email: String): List<Triple<String, String, String>> {
+        val emailKey = emailToKey(email)
+        if (emailKey.isEmpty()) return emptyList()
+        val snapshot = rootRef.child("pendingInvites").child(emailKey).get().await()
+        return snapshot.children.mapNotNull { child ->
+            val listId = child.key ?: return@mapNotNull null
+            val ownerId = child.child("ownerId").getValue(String::class.java) ?: return@mapNotNull null
+            val role = child.child("role").getValue(String::class.java) ?: "EDITOR"
+            Triple(listId, ownerId, role)
+        }
+    }
+
+    suspend fun clearPendingInvitesFor(email: String) {
+        val emailKey = emailToKey(email)
+        if (emailKey.isEmpty()) return
+        rootRef.child("pendingInvites").child(emailKey).removeValue().await()
+    }
+
     companion object {
         /**
          * RTDB keys no admiten estos caracteres: '.', '$', '#', '[', ']', '/'.

@@ -16,6 +16,9 @@ fun TaskListEntity.toDomain() = TaskList(
     description = description,
     isFavorite = isFavorite,
     contributors = contributors,
+    viewerEmails = viewerEmails,
+    memberIds = memberIds,
+    viewerIds = viewerIds,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -27,18 +30,29 @@ fun TaskList.toEntity() = TaskListEntity(
     description = description,
     isFavorite = isFavorite,
     contributors = contributors,
+    viewerEmails = viewerEmails,
+    memberIds = memberIds,
+    viewerIds = viewerIds,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
 
-fun TaskList.toDto(memberIds: List<String> = emptyList()) = TaskListDto(
+/**
+ * Para el DTO remoto los uids resueltos se pasan explícitamente (los resuelve el repositorio).
+ */
+fun TaskList.toDto(
+    memberIds: List<String> = this.memberIds,
+    viewerIds: List<String> = this.viewerIds
+) = TaskListDto(
     id = id,
     ownerId = ownerId,
     name = name,
     description = description,
     isFavorite = isFavorite,
     contributors = contributors,
+    viewerEmails = viewerEmails,
     memberIds = memberIds,
+    viewerIds = viewerIds,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -50,6 +64,23 @@ fun TaskListDto.toEntity() = TaskListEntity(
     description = description,
     isFavorite = isFavorite,
     contributors = contributors,
+    viewerEmails = viewerEmails,
+    memberIds = memberIds,
+    viewerIds = viewerIds,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
+
+fun TaskListDto.toDomain() = TaskList(
+    id = id,
+    ownerId = ownerId,
+    name = name,
+    description = description,
+    isFavorite = isFavorite,
+    contributors = contributors,
+    viewerEmails = viewerEmails,
+    memberIds = memberIds,
+    viewerIds = viewerIds,
     createdAt = createdAt,
     updatedAt = updatedAt
 )

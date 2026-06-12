@@ -41,6 +41,32 @@
     <string name="add_contributor">Agregar contribuyente</string>
     <string name="contributor_email_hint">Correo del contribuyente</string>
     <string name="create_list">Crear lista</string>
+    <string name="role_editor">Editor</string>
+    <string name="role_viewer">Lector</string>
+    <string name="role_owner">Propietario</string>
+    <string name="members">Miembros</string>
+
+    <!-- Invitations -->
+    <string name="invitations_title">Invitaciones</string>
+    <string name="invitation_text">%1$s te invitó a «%2$s» como %3$s</string>
+    <string name="accept">Aceptar</string>
+    <string name="reject">Rechazar</string>
+
+    <!-- Activity feed -->
+    <string name="activity_title">Actividad</string>
+    <string name="empty_activity">Aún no hay actividad en esta lista.</string>
+    <string name="activity_created">%1$s creó «%2$s»</string>
+    <string name="activity_completed">%1$s completó «%2$s»</string>
+    <string name="activity_reopened">%1$s reabrió «%2$s»</string>
+    <string name="activity_deleted">%1$s eliminó «%2$s»</string>
+    <string name="activity_edited">%1$s editó «%2$s»</string>
+    <string name="activity_assigned">%1$s asignó «%2$s»</string>
+
+    <!-- Comments -->
+    <string name="comments_title">Comentarios</string>
+    <string name="comment_hint">Escribe un comentario…</string>
+    <string name="send">Enviar</string>
+    <string name="empty_comments">Sé el primero en comentar.</string>
     <string name="progress_percent">Progreso — %1$d%%</string>
 
     <!-- Tasks -->
@@ -68,6 +94,9 @@
 
     <!-- Priority -->
     <string name="priority">Prioridad</string>
+    <string name="assign_to">Asignar a</string>
+    <string name="unassigned">Sin asignar</string>
+    <string name="assigned_to_label">Asignada a %1$s</string>
     <string name="priority_none">Sin prioridad</string>
     <string name="priority_low">Baja</string>
     <string name="priority_medium">Media</string>

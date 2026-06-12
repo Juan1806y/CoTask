@@ -2,14 +2,19 @@ package com.uni.colabtasks.ui.tasklists
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uni.colabtasks.domain.model.Invitation
+import com.uni.colabtasks.domain.model.MemberRole
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskCounts
 import com.uni.colabtasks.domain.model.TaskList
 import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.TaskListRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
+import com.uni.colabtasks.domain.usecase.tasklist.AcceptInvitationUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.CreateTaskListUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.DeleteTaskListUseCase
+import com.uni.colabtasks.domain.usecase.tasklist.ObserveInvitationsUseCase
+import com.uni.colabtasks.domain.usecase.tasklist.RejectInvitationUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.ToggleFavoriteUseCase
 import com.uni.colabtasks.domain.usecase.tasklist.UpdateTaskListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,20 +36,29 @@ data class TaskListItem(
     val counts: TaskCounts
 )
 
+/** Contribuyente en edición: email + rol (EDITOR o VIEWER). */
+data class ContributorDraft(
+    val email: String,
+    val role: MemberRole
+)
+
 data class TaskListDialogState(
     val visible: Boolean = false,
     val editingId: String? = null,
     val name: String = "",
     val description: String = "",
-    val contributors: List<String> = emptyList(),
-    val newContributorEmail: String = ""
+    val contributors: List<ContributorDraft> = emptyList(),
+    val newContributorEmail: String = "",
+    val newContributorRole: MemberRole = MemberRole.EDITOR
 )
 
 data class TaskListsUiState(
     val isLoading: Boolean = true,
     val items: List<TaskListItem> = emptyList(),
+    val invitations: List<Invitation> = emptyList(),
     val showFavoritesOnly: Boolean = false,
     val dialog: TaskListDialogState = TaskListDialogState(),
+    val currentUserId: String? = null,
     val pendingUndo: TaskList? = null,
     val errorMessage: String? = null
 )
@@ -58,7 +72,10 @@ class TaskListsViewModel @Inject constructor(
     private val createTaskList: CreateTaskListUseCase,
     private val updateTaskList: UpdateTaskListUseCase,
     private val deleteTaskList: DeleteTaskListUseCase,
-    private val toggleFavorite: ToggleFavoriteUseCase
+    private val toggleFavorite: ToggleFavoriteUseCase,
+    observeInvitations: ObserveInvitationsUseCase,
+    private val acceptInvitation: AcceptInvitationUseCase,
+    private val rejectInvitation: RejectInvitationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TaskListsUiState())
@@ -71,6 +88,7 @@ class TaskListsViewModel @Inject constructor(
     fun snapshotTasksFor(listId: String): List<Task> = tasksByListSnapshot[listId].orEmpty()
 
     init {
+        _uiState.update { it.copy(currentUserId = authRepository.getCurrentUserId()) }
         val items = authRepository.currentUser.flatMapLatest { user ->
             if (user == null) flowOf(emptyList()) else combineListsWithCounts(user.id)
         }.combine(showFavoritesOnly) { all, onlyFavs ->
@@ -91,6 +109,14 @@ class TaskListsViewModel @Inject constructor(
         viewModelScope.launch {
             showFavoritesOnly.collect { value ->
                 _uiState.update { it.copy(showFavoritesOnly = value) }
+            }
+        }
+        // Invitaciones pendientes (aceptar/rechazar) en vivo
+        viewModelScope.launch {
+            authRepository.currentUser.flatMapLatest { user ->
+                if (user == null) flowOf(emptyList()) else observeInvitations(user.id)
+            }.collect { invites ->
+                _uiState.update { it.copy(invitations = invites) }
             }
         }
     }
@@ -115,13 +141,15 @@ class TaskListsViewModel @Inject constructor(
     }
 
     fun openEditDialog(list: TaskList) = _uiState.update {
+        val drafts = list.contributors.map { ContributorDraft(it, MemberRole.EDITOR) } +
+            list.viewerEmails.map { ContributorDraft(it, MemberRole.VIEWER) }
         it.copy(
             dialog = TaskListDialogState(
                 visible = true,
                 editingId = list.id,
                 name = list.name,
                 description = list.description.orEmpty(),
-                contributors = list.contributors
+                contributors = drafts
             )
         )
     }
@@ -130,33 +158,36 @@ class TaskListsViewModel @Inject constructor(
     fun onNameChange(value: String) = _uiState.update { it.copy(dialog = it.dialog.copy(name = value)) }
     fun onDescriptionChange(value: String) = _uiState.update { it.copy(dialog = it.dialog.copy(description = value)) }
     fun onContributorEmailChange(value: String) = _uiState.update { it.copy(dialog = it.dialog.copy(newContributorEmail = value)) }
+    fun onContributorRoleChange(role: MemberRole) = _uiState.update { it.copy(dialog = it.dialog.copy(newContributorRole = role)) }
 
     fun addContributor() = _uiState.update { state ->
         val email = state.dialog.newContributorEmail.trim()
         if (email.isBlank() || !email.contains('@')) return@update state
-        if (state.dialog.contributors.contains(email)) {
+        if (state.dialog.contributors.any { it.email.equals(email, ignoreCase = true) }) {
             return@update state.copy(dialog = state.dialog.copy(newContributorEmail = ""))
         }
         state.copy(
             dialog = state.dialog.copy(
-                contributors = state.dialog.contributors + email,
+                contributors = state.dialog.contributors + ContributorDraft(email, state.dialog.newContributorRole),
                 newContributorEmail = ""
             )
         )
     }
 
     fun removeContributor(email: String) = _uiState.update {
-        it.copy(dialog = it.dialog.copy(contributors = it.dialog.contributors - email))
+        it.copy(dialog = it.dialog.copy(contributors = it.dialog.contributors.filterNot { c -> c.email == email }))
     }
 
     fun confirmDialog() {
         val s = _uiState.value.dialog
         val ownerId = authRepository.getCurrentUserId() ?: return
+        val editorEmails = s.contributors.filter { it.role == MemberRole.EDITOR }.map { it.email }
+        val viewerEmails = s.contributors.filter { it.role == MemberRole.VIEWER }.map { it.email }
         viewModelScope.launch {
             val result = if (s.editingId == null) {
-                createTaskList(ownerId, s.name, s.description, s.contributors).map { Unit }
+                createTaskList(ownerId, s.name, s.description, editorEmails, viewerEmails).map { Unit }
             } else {
-                updateTaskList(s.editingId, s.name, s.description, s.contributors)
+                updateTaskList(s.editingId, s.name, s.description, editorEmails, viewerEmails)
             }
             result.onSuccess { dismissDialog() }
                 .onFailure { e -> _uiState.update { it.copy(errorMessage = e.message ?: "Error") } }
@@ -168,6 +199,17 @@ class TaskListsViewModel @Inject constructor(
 
     fun toggleListFavorite(list: TaskList) {
         viewModelScope.launch { toggleFavorite(list.id, !list.isFavorite) }
+    }
+
+    // ---- invitaciones ----
+    fun accept(invitation: Invitation) {
+        val uid = authRepository.getCurrentUserId() ?: return
+        viewModelScope.launch { acceptInvitation(uid, invitation) }
+    }
+
+    fun reject(invitation: Invitation) {
+        val uid = authRepository.getCurrentUserId() ?: return
+        viewModelScope.launch { rejectInvitation(uid, invitation) }
     }
 
     // Tareas de la última lista borrada — para restaurarlas junto con la lista en el undo.
