@@ -28,10 +28,12 @@ import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -73,6 +75,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.domain.model.Recurrence
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskCategory
 import com.uni.colabtasks.domain.model.TaskCounts
@@ -490,13 +493,39 @@ private fun TaskCard(
                             maxLines = 2
                         )
                     }
-                    task.dueDate?.let { ms ->
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = formatShortDate(ms),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        task.dueDate?.let { ms ->
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = formatShortDate(ms),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (task.recurrence != Recurrence.NONE) {
+                            Spacer(Modifier.size(6.dp))
+                            Icon(
+                                imageVector = Icons.Outlined.Repeat,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                        if (task.subtasks.isNotEmpty()) {
+                            Spacer(Modifier.size(6.dp))
+                            Icon(
+                                imageVector = Icons.Outlined.Checklist,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(Modifier.size(2.dp))
+                            Text(
+                                text = "${task.subtaskDoneCount}/${task.subtasks.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                     if (assigneeName != null) {
                         Spacer(Modifier.height(4.dp))

@@ -8,9 +8,11 @@ import com.uni.colabtasks.data.mapper.toEntity
 import com.uni.colabtasks.data.remote.FirebaseTaskDataSource
 import com.uni.colabtasks.di.IoDispatcher
 import com.uni.colabtasks.domain.model.ActivityAction
+import com.uni.colabtasks.domain.model.Recurrence
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskCounts
 import com.uni.colabtasks.domain.model.TaskFilter
+import com.uni.colabtasks.domain.model.nextOccurrence
 import com.uni.colabtasks.domain.repository.ActivityRepository
 import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.TaskRepository
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -104,6 +107,23 @@ class TaskRepositoryImpl @Inject constructor(
         // Completar cancela el recordatorio; reabrir lo reprograma.
         reminderScheduler.schedule(task.toDomain())
         logActivity(task.toDomain(), if (completed) ActivityAction.COMPLETED else ActivityAction.REOPENED)
+
+        // Tareas recurrentes: al completarse, genera la siguiente ocurrencia.
+        if (completed) {
+            val domain = task.toDomain()
+            val nextDue = nextOccurrence(domain.dueDate, domain.recurrence)
+            if (domain.recurrence != Recurrence.NONE && nextDue != null) {
+                val next = domain.copy(
+                    id = UUID.randomUUID().toString(),
+                    isCompleted = false,
+                    dueDate = nextDue,
+                    subtasks = domain.subtasks.map { it.copy(isDone = false) },
+                    createdAt = now,
+                    updatedAt = now
+                )
+                createTask(next)
+            }
+        }
     }
 
     override suspend fun deleteTask(id: String) = withContext(ioDispatcher) {

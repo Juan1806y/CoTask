@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.uni.colabtasks.domain.model.Comment
 import com.uni.colabtasks.domain.model.ListMember
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.domain.model.Recurrence
+import com.uni.colabtasks.domain.model.Subtask
 import com.uni.colabtasks.domain.repository.AuthRepository
 import com.uni.colabtasks.domain.repository.CommentRepository
 import com.uni.colabtasks.domain.repository.TaskListRepository
@@ -28,6 +30,9 @@ data class TaskEditUiState(
     val dueDate: Long? = null,
     val priority: Priority = Priority.NONE,
     val assignedTo: String? = null,
+    val recurrence: Recurrence = Recurrence.NONE,
+    val subtasks: List<Subtask> = emptyList(),
+    val newSubtaskTitle: String = "",
     val members: List<ListMember> = emptyList(),
     val comments: List<Comment> = emptyList(),
     val commentDraft: String = "",
@@ -92,6 +97,8 @@ class TaskEditViewModel @Inject constructor(
                             dueDate = task.dueDate,
                             priority = task.priority,
                             assignedTo = task.assignedTo,
+                            recurrence = task.recurrence,
+                            subtasks = task.subtasks,
                             isLoading = false
                         )
                     }
@@ -110,7 +117,34 @@ class TaskEditViewModel @Inject constructor(
     fun onDueDateChange(value: Long?) = _uiState.update { it.copy(dueDate = value) }
     fun onPriorityChange(value: Priority) = _uiState.update { it.copy(priority = value) }
     fun onAssigneeChange(uid: String?) = _uiState.update { it.copy(assignedTo = uid) }
+    fun onRecurrenceChange(value: Recurrence) = _uiState.update { it.copy(recurrence = value) }
     fun consumeError() = _uiState.update { it.copy(errorMessage = null) }
+
+    // ---- subtareas (estado local; se persisten al guardar) ----
+    fun onNewSubtaskChange(value: String) = _uiState.update { it.copy(newSubtaskTitle = value) }
+
+    fun addSubtask() = _uiState.update { state ->
+        val title = state.newSubtaskTitle.trim()
+        if (title.isEmpty()) return@update state
+        state.copy(
+            subtasks = state.subtasks + Subtask(
+                id = java.util.UUID.randomUUID().toString(),
+                title = title,
+                isDone = false
+            ),
+            newSubtaskTitle = ""
+        )
+    }
+
+    fun toggleSubtask(subtaskId: String) = _uiState.update { state ->
+        state.copy(subtasks = state.subtasks.map {
+            if (it.id == subtaskId) it.copy(isDone = !it.isDone) else it
+        })
+    }
+
+    fun removeSubtask(subtaskId: String) = _uiState.update { state ->
+        state.copy(subtasks = state.subtasks.filterNot { it.id == subtaskId })
+    }
 
     fun onCommentDraftChange(value: String) = _uiState.update { it.copy(commentDraft = value) }
 
@@ -155,7 +189,9 @@ class TaskEditViewModel @Inject constructor(
                 category = s.category,
                 dueDate = s.dueDate,
                 priority = s.priority,
-                assignedTo = s.assignedTo
+                assignedTo = s.assignedTo,
+                recurrence = s.recurrence,
+                subtasks = s.subtasks
             ).onSuccess {
                 _uiState.update { it.copy(isSaving = false, saved = true) }
             }.onFailure { e ->

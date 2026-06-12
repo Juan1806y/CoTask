@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
 import com.uni.colabtasks.domain.model.ThemeMode
+import com.uni.colabtasks.ui.lock.canUseBiometrics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,6 +127,26 @@ fun SettingsScreen(
                         checked = state.preferences.dynamicColor,
                         onCheckedChange = viewModel::setDynamicColor
                     )
+                }
+            }
+
+            val context = LocalContext.current
+            if (canUseBiometrics(context)) {
+                SectionCard(title = stringResource(R.string.settings_security)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_biometric),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Switch(
+                            checked = state.preferences.biometricEnabled,
+                            onCheckedChange = viewModel::setBiometricEnabled
+                        )
+                    }
                 }
             }
 

@@ -3,6 +3,13 @@ package com.uni.colabtasks.data.remote.dto
 import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
+data class SubtaskDto(
+    var id: String = "",
+    var title: String = "",
+    var done: Boolean = false
+)
+
+@IgnoreExtraProperties
 data class TaskDto(
     var id: String = "",
     var listId: String = "",
@@ -14,6 +21,8 @@ data class TaskDto(
     var dueDate: Long? = null,
     var priorityLevel: Int = 0,
     var assignedTo: String? = null,
+    var recurrence: Int = 0,
+    var subtasks: List<SubtaskDto> = emptyList(),
     var createdAt: Long = 0L,
     var updatedAt: Long = 0L
 )

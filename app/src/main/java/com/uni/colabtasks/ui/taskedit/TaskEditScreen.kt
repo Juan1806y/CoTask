@@ -14,11 +14,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -58,6 +60,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uni.colabtasks.R
 import com.uni.colabtasks.domain.model.Comment
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.domain.model.Recurrence
+import com.uni.colabtasks.domain.model.Subtask
 import com.uni.colabtasks.ui.util.formatShortDate
 import com.uni.colabtasks.ui.util.priorityColor
 import com.uni.colabtasks.ui.util.priorityLabel
@@ -99,21 +103,19 @@ fun TaskEditScreen(
                 .padding(16.dp)
         ) {
             TaskEditCard(
+                state = state,
                 isEditing = viewModel.isEditing,
-                title = state.title,
-                description = state.description,
-                category = state.category,
-                dueDate = state.dueDate,
-                priority = state.priority,
-                members = state.members,
-                assignedTo = state.assignedTo,
-                isSaving = state.isSaving,
                 onTitleChange = viewModel::onTitleChange,
                 onDescriptionChange = viewModel::onDescriptionChange,
                 onCategoryChange = viewModel::onCategoryChange,
                 onDateChange = viewModel::onDueDateChange,
                 onPriorityChange = viewModel::onPriorityChange,
                 onAssigneeChange = viewModel::onAssigneeChange,
+                onRecurrenceChange = viewModel::onRecurrenceChange,
+                onNewSubtaskChange = viewModel::onNewSubtaskChange,
+                onAddSubtask = viewModel::addSubtask,
+                onToggleSubtask = viewModel::toggleSubtask,
+                onRemoveSubtask = viewModel::removeSubtask,
                 onSave = viewModel::save,
                 onCancel = onBack
             )
@@ -137,24 +139,30 @@ fun TaskEditScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TaskEditCard(
+    state: TaskEditUiState,
     isEditing: Boolean,
-    title: String,
-    description: String,
-    category: String,
-    dueDate: Long?,
-    priority: Priority,
-    members: List<com.uni.colabtasks.domain.model.ListMember>,
-    assignedTo: String?,
-    isSaving: Boolean,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onCategoryChange: (String) -> Unit,
     onDateChange: (Long?) -> Unit,
     onPriorityChange: (Priority) -> Unit,
     onAssigneeChange: (String?) -> Unit,
+    onRecurrenceChange: (Recurrence) -> Unit,
+    onNewSubtaskChange: (String) -> Unit,
+    onAddSubtask: () -> Unit,
+    onToggleSubtask: (String) -> Unit,
+    onRemoveSubtask: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
+    val title = state.title
+    val description = state.description
+    val category = state.category
+    val dueDate = state.dueDate
+    val priority = state.priority
+    val members = state.members
+    val assignedTo = state.assignedTo
+    val isSaving = state.isSaving
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
     Surface(
@@ -237,6 +245,19 @@ private fun TaskEditCard(
                     onSelect = onAssigneeChange
                 )
             }
+
+            Spacer(Modifier.size(14.dp))
+            RecurrenceSelector(selected = state.recurrence, onSelect = onRecurrenceChange)
+
+            Spacer(Modifier.size(14.dp))
+            SubtasksEditor(
+                subtasks = state.subtasks,
+                newSubtask = state.newSubtaskTitle,
+                onNewSubtaskChange = onNewSubtaskChange,
+                onAdd = onAddSubtask,
+                onToggle = onToggleSubtask,
+                onRemove = onRemoveSubtask
+            )
 
             Spacer(Modifier.size(16.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -357,6 +378,93 @@ private fun PrioritySelector(selected: Priority, onSelect: (Priority) -> Unit) {
                         selectedLabelColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecurrenceSelector(selected: Recurrence, onSelect: (Recurrence) -> Unit) {
+    Column {
+        Text(
+            text = stringResource(R.string.recurrence),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.size(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val options = listOf(
+                Recurrence.NONE to stringResource(R.string.recurrence_none),
+                Recurrence.DAILY to stringResource(R.string.recurrence_daily),
+                Recurrence.WEEKLY to stringResource(R.string.recurrence_weekly),
+                Recurrence.MONTHLY to stringResource(R.string.recurrence_monthly)
+            )
+            options.forEach { (rec, label) ->
+                FilterChip(
+                    selected = selected == rec,
+                    onClick = { onSelect(rec) },
+                    label = { Text(label) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubtasksEditor(
+    subtasks: List<Subtask>,
+    newSubtask: String,
+    onNewSubtaskChange: (String) -> Unit,
+    onAdd: () -> Unit,
+    onToggle: (String) -> Unit,
+    onRemove: (String) -> Unit
+) {
+    Column {
+        val done = subtasks.count { it.isDone }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.subtasks),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (subtasks.isNotEmpty()) {
+                Spacer(Modifier.size(6.dp))
+                Text(
+                    text = stringResource(R.string.subtasks_progress, done, subtasks.size),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Spacer(Modifier.size(4.dp))
+        subtasks.forEach { st ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = st.isDone, onCheckedChange = { onToggle(st.id) })
+                Text(
+                    text = st.title,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textDecoration = if (st.isDone) androidx.compose.ui.text.style.TextDecoration.LineThrough
+                                    else androidx.compose.ui.text.style.TextDecoration.None
+                )
+                IconButton(onClick = { onRemove(st.id) }) {
+                    Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.delete), modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = newSubtask,
+                onValueChange = onNewSubtaskChange,
+                placeholder = { Text(stringResource(R.string.subtask_hint)) },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onAdd, enabled = newSubtask.isNotBlank()) {
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(R.string.add_subtask))
             }
         }
     }

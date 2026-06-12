@@ -108,6 +108,9 @@ dependencies {
     // WorkManager (due-date reminders)
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Biometric
+    implementation(libs.androidx.biometric)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -65,6 +65,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { preferencesRepository.setDynamicColor(enabled) }
     }
 
+    fun setBiometricEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferencesRepository.setBiometricEnabled(enabled) }
+    }
+
     fun startEditingName() = _uiState.update {
         it.copy(editingName = true, nameDraft = it.user?.displayName.orEmpty())
     }

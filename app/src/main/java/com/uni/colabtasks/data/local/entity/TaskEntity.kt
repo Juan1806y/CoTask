@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.uni.colabtasks.domain.model.Subtask
 
 @Entity(
     tableName = "tasks",
@@ -28,6 +29,8 @@ data class TaskEntity(
     val dueDate: Long?,
     val priorityLevel: Int = 0,
     val assignedTo: String? = null,
+    val recurrence: Int = 0,
+    val subtasks: List<Subtask> = emptyList(),
     val createdAt: Long,
     val updatedAt: Long
 )

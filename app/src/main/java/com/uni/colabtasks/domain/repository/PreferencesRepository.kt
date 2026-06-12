@@ -8,4 +8,6 @@ interface PreferencesRepository {
     val preferences: Flow<AppPreferences>
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setDynamicColor(enabled: Boolean)
+    suspend fun setOnboardingDone(done: Boolean)
+    suspend fun setBiometricEnabled(enabled: Boolean)
 }

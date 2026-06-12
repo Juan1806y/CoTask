@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -100,13 +101,14 @@ fun CalendarScreen(
             MonthGrid(
                 month = state.currentMonth,
                 selectedDay = state.selectedDay,
-                daysWithTasks = state.daysWithTasks,
+                tasksByDay = state.tasksByDay,
                 onDayClick = viewModel::selectDay
             )
-            Spacer(Modifier.height(16.dp))
+            CalendarLegend()
+            Spacer(Modifier.height(8.dp))
             DayActivities(
                 selectedDay = state.selectedDay,
-                tasks = state.tasksForSelectedDay,
+                dayTasks = state.tasksForSelectedDay,
                 onTaskClick = onOpenTask
             )
         }
@@ -149,7 +151,7 @@ private fun CalendarHeader(month: YearMonth, onPrev: () -> Unit, onNext: () -> U
 private fun MonthGrid(
     month: YearMonth,
     selectedDay: LocalDate?,
-    daysWithTasks: Set<LocalDate>,
+    tasksByDay: Map<LocalDate, List<DayTask>>,
     onDayClick: (LocalDate) -> Unit
 ) {
     val firstOfMonth = month.atDay(1)
@@ -173,10 +175,12 @@ private fun MonthGrid(
             modifier = Modifier.fillMaxWidth().height(((cells.size / 7) * 48).dp)
         ) {
             gridItems(cells) { day ->
+                val entries = day?.let { tasksByDay[it] }.orEmpty()
                 DayCell(
                     day = day,
                     selected = day != null && day == selectedDay,
-                    hasTasks = day != null && day in daysWithTasks,
+                    hasReal = entries.any { !it.isProjected },
+                    hasProjected = entries.any { it.isProjected },
                     onClick = { if (day != null) onDayClick(day) }
                 )
             }
@@ -205,7 +209,8 @@ private fun WeekHeader() {
 private fun DayCell(
     day: LocalDate?,
     selected: Boolean,
-    hasTasks: Boolean,
+    hasReal: Boolean,
+    hasProjected: Boolean,
     onClick: () -> Unit
 ) {
     Box(
@@ -232,17 +237,34 @@ private fun DayCell(
                            else MaterialTheme.colorScheme.onSurface,
                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                 )
-                if (hasTasks) {
+                if (hasReal || hasProjected) {
                     Spacer(Modifier.size(2.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.primary
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        // Punto sólido = tarea real (su fecha límite)
+                        if (hasReal) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (selected) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.primary
+                                    )
                             )
-                    )
+                        }
+                        // Punto secundario = repetición proyectada
+                        if (hasProjected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (selected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+                                        else MaterialTheme.colorScheme.tertiary
+                                    )
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -250,9 +272,38 @@ private fun DayCell(
 }
 
 @Composable
+private fun CalendarLegend() {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(Modifier.size(4.dp))
+        Text(
+            text = stringResource(R.string.legend_task),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.size(16.dp))
+        Box(
+            modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.tertiary)
+        )
+        Spacer(Modifier.size(4.dp))
+        Text(
+            text = stringResource(R.string.legend_recurrence),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
 private fun DayActivities(
     selectedDay: LocalDate?,
-    tasks: List<Task>,
+    dayTasks: List<DayTask>,
     onTaskClick: (Task) -> Unit
 ) {
     val title = selectedDay?.let { day ->
@@ -267,7 +318,7 @@ private fun DayActivities(
             fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.height(8.dp))
-        if (tasks.isEmpty()) {
+        if (dayTasks.isEmpty()) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -286,18 +337,36 @@ private fun DayActivities(
                 contentPadding = PaddingValues(vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(tasks, key = { it.id }) { task ->
+                items(dayTasks, key = { it.task.id }) { dayTask ->
+                    val task = dayTask.task
                     Card(
                         onClick = { onTaskClick(task) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text(
-                                text = task.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = task.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (dayTask.isProjected) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Repeat,
+                                        contentDescription = stringResource(R.string.recurrence),
+                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(Modifier.size(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.recurrence_badge),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                            }
                             if (!task.category.isNullOrBlank()) {
                                 Text(
                                     text = task.category,

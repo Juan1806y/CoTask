@@ -24,6 +24,8 @@ class PreferencesRepositoryImpl @Inject constructor(
     private object Keys {
         val ThemeMode = stringPreferencesKey("theme_mode")
         val DynamicColor = booleanPreferencesKey("dynamic_color")
+        val OnboardingDone = booleanPreferencesKey("onboarding_done")
+        val BiometricEnabled = booleanPreferencesKey("biometric_enabled")
     }
 
     override val preferences: Flow<AppPreferences> = context.preferencesDataStore.data.map { prefs ->
@@ -31,7 +33,9 @@ class PreferencesRepositoryImpl @Inject constructor(
             themeMode = prefs[Keys.ThemeMode]
                 ?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 ?: ThemeMode.SYSTEM,
-            dynamicColor = prefs[Keys.DynamicColor] ?: false
+            dynamicColor = prefs[Keys.DynamicColor] ?: false,
+            onboardingDone = prefs[Keys.OnboardingDone] ?: false,
+            biometricEnabled = prefs[Keys.BiometricEnabled] ?: false
         )
     }
 
@@ -41,5 +45,13 @@ class PreferencesRepositoryImpl @Inject constructor(
 
     override suspend fun setDynamicColor(enabled: Boolean) {
         context.preferencesDataStore.edit { it[Keys.DynamicColor] = enabled }
+    }
+
+    override suspend fun setOnboardingDone(done: Boolean) {
+        context.preferencesDataStore.edit { it[Keys.OnboardingDone] = done }
+    }
+
+    override suspend fun setBiometricEnabled(enabled: Boolean) {
+        context.preferencesDataStore.edit { it[Keys.BiometricEnabled] = enabled }
     }
 }

@@ -54,6 +54,7 @@ data class TaskListDialogState(
 
 data class TaskListsUiState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val items: List<TaskListItem> = emptyList(),
     val invitations: List<Invitation> = emptyList(),
     val showFavoritesOnly: Boolean = false,
@@ -199,6 +200,20 @@ class TaskListsViewModel @Inject constructor(
 
     fun toggleListFavorite(list: TaskList) {
         viewModelScope.launch { toggleFavorite(list.id, !list.isFavorite) }
+    }
+
+    fun refresh() {
+        val uid = authRepository.getCurrentUserId() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            runCatching {
+                taskListRepository.syncFromRemote(uid)
+                _uiState.value.items.map { it.list.ownerId }.distinct().forEach { ownerId ->
+                    taskRepository.syncTasksForOwner(ownerId)
+                }
+            }
+            _uiState.update { it.copy(isRefreshing = false) }
+        }
     }
 
     // ---- invitaciones ----

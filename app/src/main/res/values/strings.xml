@@ -97,6 +97,19 @@
     <string name="assign_to">Asignar a</string>
     <string name="unassigned">Sin asignar</string>
     <string name="assigned_to_label">Asignada a %1$s</string>
+
+    <!-- Recurrence -->
+    <string name="recurrence">Repetir</string>
+    <string name="recurrence_none">No repetir</string>
+    <string name="recurrence_daily">Diaria</string>
+    <string name="recurrence_weekly">Semanal</string>
+    <string name="recurrence_monthly">Mensual</string>
+
+    <!-- Subtasks -->
+    <string name="subtasks">Subtareas</string>
+    <string name="subtask_hint">Nueva subtarea</string>
+    <string name="add_subtask">Agregar subtarea</string>
+    <string name="subtasks_progress">%1$d/%2$d</string>
     <string name="priority_none">Sin prioridad</string>
     <string name="priority_low">Baja</string>
     <string name="priority_medium">Media</string>
@@ -126,6 +139,9 @@
     <string name="month_selector">Mes</string>
     <string name="activities_for_day">Actividades del %1$s</string>
     <string name="no_activities">Sin actividades este día.</string>
+    <string name="legend_task">Tarea</string>
+    <string name="legend_recurrence">Repetición</string>
+    <string name="recurrence_badge">Repetición</string>
 
     <!-- Settings -->
     <string name="settings_title">Configuración</string>
@@ -155,6 +171,25 @@
     <string name="reminder_channel_name">Recordatorios de tareas</string>
     <string name="reminder_channel_desc">Notificaciones para tareas con fecha límite</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_start">Comenzar</string>
+    <string name="onboarding_title_1">Organiza tus tareas</string>
+    <string name="onboarding_body_1">Crea listas, agrega tareas con fecha, prioridad y categorías. Todo en un solo lugar.</string>
+    <string name="onboarding_title_2">Colabora en equipo</string>
+    <string name="onboarding_body_2">Invita a otros a tus listas, asigna tareas y comenta. Trabajen juntos en tiempo real.</string>
+    <string name="onboarding_title_3">No olvides nada</string>
+    <string name="onboarding_body_3">Recordatorios, subtareas, tareas recurrentes y un calendario para tener todo bajo control.</string>
+
+    <!-- Settings: security -->
+    <string name="settings_security">Seguridad</string>
+    <string name="settings_biometric">Bloqueo con huella/biometría</string>
+    <string name="biometric_prompt_title">Desbloquea CoTask</string>
+    <string name="biometric_prompt_subtitle">Usa tu huella o rostro para continuar</string>
+    <string name="biometric_unavailable">Biometría no disponible en este dispositivo</string>
+    <string name="unlock">Desbloquear</string>
+
     <!-- Firebase / Google sign-in (set the Web Client ID from your Firebase console) -->
-    <string name="default_web_client_id">717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com</string>
+    <string name="default_web_client_id" translatable="false">717329161701-spv5sfcedmhuafesedcbnnfcv5i8kjcg.apps.googleusercontent.com</string>
 </resources>

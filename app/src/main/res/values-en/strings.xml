@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CoTask</string>
+
+    <!-- Auth -->
+    <string name="login_title">Welcome</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_up">Create account</string>
+    <string name="sign_out">Sign out</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="no_account_prompt">Don\'t have an account? Sign up</string>
+    <string name="has_account_prompt">Already have an account? Sign in</string>
+    <string name="signup_title">Create your account</string>
+    <string name="display_name">Name</string>
+
+    <!-- Drawer -->
+    <string name="menu_lists">Lists</string>
+    <string name="menu_calendar">Calendar</string>
+    <string name="menu_settings">Settings</string>
+    <string name="open_menu">Open menu</string>
+    <string name="profile">Profile</string>
+
+    <!-- Task lists -->
+    <string name="task_lists_title">My Lists</string>
+    <string name="lists_count_total">%1$d lists total</string>
+    <string name="list_count_total_one">1 list total</string>
+    <string name="new_list">New List</string>
+    <string name="show_favorites">Favorites</string>
+    <string name="empty_lists">You don\'t have any lists yet. Create your first one.</string>
+    <string name="empty_favorites">You have no favorite lists.</string>
+
+    <!-- List create/edit dialog -->
+    <string name="dialog_new_list_title">Create new list</string>
+    <string name="dialog_new_list_subtitle">Create a new list to organize your tasks</string>
+    <string name="dialog_edit_list_title">Edit list</string>
+    <string name="list_name_hint">Name</string>
+    <string name="list_description_hint">Description</string>
+    <string name="add_contributor">Add contributor</string>
+    <string name="contributor_email_hint">Contributor email</string>
+    <string name="create_list">Create list</string>
+    <string name="role_editor">Editor</string>
+    <string name="role_viewer">Viewer</string>
+    <string name="role_owner">Owner</string>
+    <string name="members">Members</string>
+
+    <!-- Invitations -->
+    <string name="invitations_title">Invitations</string>
+    <string name="invitation_text">%1$s invited you to “%2$s” as %3$s</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Decline</string>
+
+    <!-- Activity feed -->
+    <string name="activity_title">Activity</string>
+    <string name="empty_activity">No activity in this list yet.</string>
+    <string name="activity_created">%1$s created “%2$s”</string>
+    <string name="activity_completed">%1$s completed “%2$s”</string>
+    <string name="activity_reopened">%1$s reopened “%2$s”</string>
+    <string name="activity_deleted">%1$s deleted “%2$s”</string>
+    <string name="activity_edited">%1$s edited “%2$s”</string>
+    <string name="activity_assigned">%1$s assigned “%2$s”</string>
+
+    <!-- Comments -->
+    <string name="comments_title">Comments</string>
+    <string name="comment_hint">Write a comment…</string>
+    <string name="send">Send</string>
+    <string name="empty_comments">Be the first to comment.</string>
+    <string name="progress_percent">Progress — %1$d%%</string>
+
+    <!-- Tasks -->
+    <string name="new_task">New Task</string>
+    <string name="edit_task">Edit task</string>
+    <string name="dialog_new_task_title">Create new task</string>
+    <string name="dialog_new_task_subtitle">Add a new task to your list</string>
+    <string name="task_title_hint">Task name</string>
+    <string name="task_description_hint">Description</string>
+    <string name="task_date_hint">Date</string>
+    <string name="task_date_placeholder">mm/dd/yyyy</string>
+    <string name="task_category_hint">Category</string>
+    <string name="custom_category">Other…</string>
+    <string name="create_task">Create task</string>
+    <string name="filter_all">All</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_done">Completed</string>
+    <string name="filter_by_category">Filter by category</string>
+    <string name="filter_all_categories">All categories</string>
+    <string name="stat_total">Total</string>
+    <string name="stat_pending">Pending</string>
+    <string name="stat_done">Completed</string>
+    <string name="empty_tasks">No tasks in this list yet.</string>
+    <string name="empty_search">No tasks match your search.</string>
+
+    <!-- Priority -->
+    <string name="priority">Priority</string>
+    <string name="assign_to">Assign to</string>
+    <string name="unassigned">Unassigned</string>
+    <string name="assigned_to_label">Assigned to %1$s</string>
+
+    <!-- Recurrence -->
+    <string name="recurrence">Repeat</string>
+    <string name="recurrence_none">Don\'t repeat</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_weekly">Weekly</string>
+    <string name="recurrence_monthly">Monthly</string>
+
+    <!-- Subtasks -->
+    <string name="subtasks">Subtasks</string>
+    <string name="subtask_hint">New subtask</string>
+    <string name="add_subtask">Add subtask</string>
+    <string name="subtasks_progress">%1$d/%2$d</string>
+    <string name="priority_none">No priority</string>
+    <string name="priority_low">Low</string>
+    <string name="priority_medium">Medium</string>
+    <string name="priority_high">High</string>
+
+    <!-- Sort -->
+    <string name="sort_by">Sort by</string>
+    <string name="sort_due_date">Due date</string>
+    <string name="sort_priority">Priority</string>
+    <string name="sort_alphabetical">Alphabetical</string>
+    <string name="sort_created">Most recent</string>
+
+    <!-- Search -->
+    <string name="search_tasks">Search tasks…</string>
+    <string name="clear_search">Clear search</string>
+
+    <!-- Categories -->
+    <string name="category_personal">Personal</string>
+    <string name="category_work">Work</string>
+    <string name="category_study">Study</string>
+    <string name="category_home">Home</string>
+    <string name="category_health">Health</string>
+    <string name="category_other">Other</string>
+
+    <!-- Calendar -->
+    <string name="calendar_title">Calendar</string>
+    <string name="month_selector">Month</string>
+    <string name="activities_for_day">Activities for %1$s</string>
+    <string name="no_activities">No activities this day.</string>
+    <string name="legend_task">Task</string>
+    <string name="legend_recurrence">Repetition</string>
+    <string name="recurrence_badge">Repeats</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic color (Material You)</string>
+    <string name="settings_account">Account</string>
+    <string name="edit_profile">Edit profile</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+    <string name="favorite">Favorite</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="generic_error">Something went wrong. Please try again.</string>
+    <string name="undo">Undo</string>
+    <string name="task_deleted">Task deleted</string>
+    <string name="list_deleted">List deleted</string>
+
+    <!-- Reminders -->
+    <string name="reminder_title">Task reminder</string>
+    <string name="reminder_channel_name">Task reminders</string>
+    <string name="reminder_channel_desc">Notifications for tasks with a due date</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="onboarding_title_1">Organize your tasks</string>
+    <string name="onboarding_body_1">Create lists, add tasks with dates, priority and categories. All in one place.</string>
+    <string name="onboarding_title_2">Collaborate as a team</string>
+    <string name="onboarding_body_2">Invite others to your lists, assign tasks and comment. Work together in real time.</string>
+    <string name="onboarding_title_3">Never forget anything</string>
+    <string name="onboarding_body_3">Reminders, subtasks, recurring tasks and a calendar to keep everything under control.</string>
+
+    <!-- Settings: security -->
+    <string name="settings_security">Security</string>
+    <string name="settings_biometric">Biometric / fingerprint lock</string>
+    <string name="biometric_prompt_title">Unlock CoTask</string>
+    <string name="biometric_prompt_subtitle">Use your fingerprint or face to continue</string>
+    <string name="biometric_unavailable">Biometrics not available on this device</string>
+    <string name="unlock">Unlock</string>
+</resources>

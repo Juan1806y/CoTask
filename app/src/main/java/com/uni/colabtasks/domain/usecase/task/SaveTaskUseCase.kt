@@ -1,6 +1,8 @@
 package com.uni.colabtasks.domain.usecase.task
 
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.domain.model.Recurrence
+import com.uni.colabtasks.domain.model.Subtask
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.repository.TaskRepository
 import java.util.UUID
@@ -22,12 +24,15 @@ class SaveTaskUseCase @Inject constructor(
         category: String?,
         dueDate: Long?,
         priority: Priority = Priority.NONE,
-        assignedTo: String? = null
+        assignedTo: String? = null,
+        recurrence: Recurrence = Recurrence.NONE,
+        subtasks: List<Subtask> = emptyList()
     ): Result<String> {
         val trimmedTitle = title.trim()
         if (trimmedTitle.isEmpty()) {
             return Result.failure(IllegalArgumentException("El título es obligatorio"))
         }
+        val cleanSubtasks = subtasks.filter { it.title.isNotBlank() }
         val now = System.currentTimeMillis()
         return runCatching {
             if (existingId == null) {
@@ -42,6 +47,8 @@ class SaveTaskUseCase @Inject constructor(
                     dueDate = dueDate,
                     priority = priority,
                     assignedTo = assignedTo,
+                    recurrence = recurrence,
+                    subtasks = cleanSubtasks,
                     createdAt = now,
                     updatedAt = now
                 )
@@ -56,6 +63,8 @@ class SaveTaskUseCase @Inject constructor(
                     dueDate = dueDate,
                     priority = priority,
                     assignedTo = assignedTo,
+                    recurrence = recurrence,
+                    subtasks = cleanSubtasks,
                     updatedAt = now
                 )
                 repository.updateTask(updated)

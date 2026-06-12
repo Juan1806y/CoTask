@@ -2,9 +2,12 @@ package com.uni.colabtasks.data.mapper
 
 import com.uni.colabtasks.data.local.entity.TaskEntity
 import com.uni.colabtasks.data.local.entity.TaskListEntity
+import com.uni.colabtasks.data.remote.dto.SubtaskDto
 import com.uni.colabtasks.data.remote.dto.TaskDto
 import com.uni.colabtasks.data.remote.dto.TaskListDto
 import com.uni.colabtasks.domain.model.Priority
+import com.uni.colabtasks.domain.model.Recurrence
+import com.uni.colabtasks.domain.model.Subtask
 import com.uni.colabtasks.domain.model.Task
 import com.uni.colabtasks.domain.model.TaskList
 
@@ -97,6 +100,8 @@ fun TaskEntity.toDomain() = Task(
     dueDate = dueDate,
     priority = Priority.fromLevel(priorityLevel),
     assignedTo = assignedTo,
+    recurrence = Recurrence.entries.getOrElse(recurrence) { Recurrence.NONE },
+    subtasks = subtasks,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -112,6 +117,8 @@ fun Task.toEntity() = TaskEntity(
     dueDate = dueDate,
     priorityLevel = priority.level,
     assignedTo = assignedTo,
+    recurrence = recurrence.ordinal,
+    subtasks = subtasks,
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -127,6 +134,8 @@ fun Task.toDto() = TaskDto(
     dueDate = dueDate,
     priorityLevel = priority.level,
     assignedTo = assignedTo,
+    recurrence = recurrence.ordinal,
+    subtasks = subtasks.map { SubtaskDto(it.id, it.title, it.isDone) },
     createdAt = createdAt,
     updatedAt = updatedAt
 )
@@ -142,6 +151,8 @@ fun TaskDto.toEntity() = TaskEntity(
     dueDate = dueDate,
     priorityLevel = priorityLevel,
     assignedTo = assignedTo,
+    recurrence = recurrence,
+    subtasks = subtasks.map { Subtask(it.id, it.title, it.done) },
     createdAt = createdAt,
     updatedAt = updatedAt
 )
